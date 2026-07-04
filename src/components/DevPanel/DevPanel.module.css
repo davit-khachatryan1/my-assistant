@@ -1,0 +1,59 @@
+.panel {
+  position: fixed;
+  right: 16px;
+  bottom: 104px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  max-width: 220px;
+  background: rgba(15, 17, 21, 0.82);
+  border: 1px dashed rgba(247, 147, 26, 0.5);
+  border-radius: 22px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 30px -10px rgba(247, 147, 26, 0.2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.badge {
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.button,
+.pill {
+  padding: var(--space-1) var(--space-2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.button[data-active='true'],
+.pill[data-active='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(234, 88, 12, 0.14);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+@media (max-width: 520px) {
+  .panel {
+    display: none;
+  }
+}

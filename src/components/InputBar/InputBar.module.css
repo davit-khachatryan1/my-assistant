@@ -1,0 +1,191 @@
+.inputBar {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 4;
+  min-height: 70px;
+  max-height: 140px;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) 54px;
+  align-items: end;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 30px;
+  background:
+    linear-gradient(135deg, rgba(15, 17, 21, 0.9), rgba(3, 3, 4, 0.62)),
+    radial-gradient(circle at 12% 18%, rgba(247, 147, 26, 0.2), transparent 56%),
+    radial-gradient(circle at 88% 72%, rgba(255, 214, 0, 0.12), transparent 52%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px);
+  box-shadow:
+    inset 0 0 24px rgba(255, 255, 255, 0.035),
+    0 24px 60px -34px rgba(247, 147, 26, 0.9);
+}
+
+.micError {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 100%;
+  margin-bottom: 8px;
+  color: var(--danger);
+  text-align: center;
+}
+
+.inputBar::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(110deg, rgba(255, 214, 0, 0.22), transparent 32%, transparent 68%, rgba(247, 147, 26, 0.22));
+  opacity: 0.6;
+  pointer-events: none;
+  mask-image: linear-gradient(black, transparent 56%);
+}
+
+.micButton,
+.sendButton {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(circle at 36% 22%, rgba(255, 255, 255, 0.11), transparent 42%),
+    linear-gradient(145deg, rgba(15, 17, 21, 0.96), rgba(3, 3, 4, 0.52));
+  box-shadow:
+    inset 0 0 18px rgba(255, 255, 255, 0.04),
+    0 16px 34px -24px rgba(255, 214, 0, 0.78);
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.micButton::after,
+.sendButton::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: inherit;
+  border: 1px solid rgba(247, 147, 26, 0.16);
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.micButton[data-active='true'] {
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 214, 0, 0.28), transparent 54%),
+    linear-gradient(145deg, rgba(234, 88, 12, 0.72), rgba(247, 147, 26, 0.54));
+  border-color: rgba(255, 214, 0, 0.55);
+  color: var(--text-primary);
+  box-shadow:
+    0 0 32px -10px rgba(255, 214, 0, 0.88),
+    inset 0 0 20px rgba(255, 255, 255, 0.08);
+  animation: micListening 1.6s ease-in-out infinite;
+}
+
+.micButton:hover,
+.sendButton[data-enabled='true']:hover {
+  transform: translateY(-2px) scale(1.03);
+  border-color: rgba(255, 214, 0, 0.45);
+}
+
+.micButton:hover::after,
+.sendButton[data-enabled='true']:hover::after,
+.micButton[data-active='true']::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.textField {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  max-height: 80px;
+  overflow-y: auto;
+  padding: 16px 4px 13px;
+  color: var(--text-primary);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.textField::placeholder {
+  color: rgba(148, 163, 184, 0.62);
+}
+
+.textField:focus {
+  border-color: var(--ember);
+  box-shadow: 0 11px 18px -16px rgba(255, 214, 0, 0.9);
+  outline: none;
+}
+
+.sendButton {
+  color: var(--text-tertiary);
+}
+
+.sendButton[data-enabled='true'] {
+  background:
+    radial-gradient(circle at 68% 28%, rgba(255, 214, 0, 0.28), transparent 54%),
+    linear-gradient(135deg, var(--accent-dim), var(--accent));
+  border-color: rgba(255, 214, 0, 0.52);
+  color: var(--text-primary);
+  box-shadow:
+    0 0 34px -11px rgba(247, 147, 26, 0.95),
+    inset 0 0 18px rgba(255, 255, 255, 0.08);
+}
+
+.sendButton:disabled {
+  cursor: default;
+  opacity: 0.56;
+}
+
+@keyframes micListening {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@media (max-width: 390px) {
+  .inputBar {
+    left: 10px;
+    right: 10px;
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    border-radius: 26px;
+  }
+
+  .micButton,
+  .sendButton {
+    width: 48px;
+    height: 48px;
+    border-radius: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .micButton[data-active='true'] {
+    animation: none;
+  }
+}

@@ -1,0 +1,17 @@
+@tailwind base;
+
+@import './tokens.css';
+@import './typography.css';
+@import './reset.css';
+
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(247, 147, 26, 0.12), transparent 34rem),
+    var(--void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}

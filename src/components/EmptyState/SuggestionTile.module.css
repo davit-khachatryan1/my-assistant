@@ -1,0 +1,152 @@
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 84px;
+  padding: 16px;
+  background:
+    linear-gradient(145deg, rgba(15, 17, 21, 0.86), rgba(3, 3, 4, 0.46)),
+    radial-gradient(circle at 18% 16%, rgba(247, 147, 26, 0.18), transparent 58%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  text-align: left;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  box-shadow:
+    inset 0 0 22px rgba(255, 255, 255, 0.035),
+    0 20px 45px -34px rgba(247, 147, 26, 0.92);
+  transition:
+    transform 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.tile::before {
+  content: '';
+  position: absolute;
+  inset: -40% -20% 20% 20%;
+  background: repeating-radial-gradient(
+    ellipse at center,
+    transparent 0 14px,
+    rgba(255, 255, 255, 0.08) 15px 16px,
+    transparent 17px 28px
+  );
+  transform: rotate(-28deg);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-110%);
+  animation: tileGlint 6.5s ease-in-out infinite;
+}
+
+.tile:hover {
+  transform: translateY(-4px) scale(1.015);
+  border-color: rgba(255, 214, 0, 0.48);
+  box-shadow:
+    inset 0 0 24px rgba(255, 255, 255, 0.04),
+    0 0 36px -10px rgba(247, 147, 26, 0.42);
+}
+
+.tile[data-tint='plum'] {
+  background:
+    linear-gradient(135deg, rgba(234, 88, 12, 0.86), rgba(247, 147, 26, 0.82)),
+    radial-gradient(circle at 80% 10%, rgba(255, 214, 0, 0.34), transparent 52%);
+  border-color: rgba(255, 214, 0, 0.3);
+}
+
+.tile[data-tint='chartreuse'] {
+  background:
+    linear-gradient(145deg, rgba(15, 17, 21, 0.88), rgba(3, 3, 4, 0.5)),
+    radial-gradient(circle at 90% 10%, rgba(255, 214, 0, 0.18), transparent 58%);
+  border-color: rgba(255, 214, 0, 0.22);
+}
+
+.iconWrap {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 40% 28%, rgba(255, 214, 0, 0.18), transparent 56%),
+    rgba(3, 3, 4, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--ember);
+  box-shadow: 0 0 26px -12px rgba(255, 214, 0, 0.86);
+}
+
+.iconWrap[data-tint='plum'] {
+  color: var(--text-primary);
+}
+
+.iconWrap[data-tint='chartreuse'] {
+  color: var(--accent);
+}
+
+.label {
+  position: relative;
+  z-index: 1;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 1.12;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.tile[data-tint='plum'] .label {
+  color: var(--text-primary);
+}
+
+.cornerArrow {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: var(--text-primary);
+  z-index: 1;
+  opacity: 0.82;
+}
+
+.tile[data-tint='plum'] .cornerArrow {
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+@keyframes tileGlint {
+  0%,
+  62% {
+    transform: translateX(-110%);
+  }
+  80%,
+  100% {
+    transform: translateX(110%);
+  }
+}
+
+@media (max-width: 380px) {
+  .tile {
+    border-radius: 24px;
+    padding: 14px;
+  }
+
+  .label {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile::after {
+    animation: none;
+  }
+}

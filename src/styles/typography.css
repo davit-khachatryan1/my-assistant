@@ -1,0 +1,108 @@
+@import '@fontsource/space-grotesk/400.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/600.css';
+@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/noto-sans-armenian/500.css';
+@import '@fontsource/noto-sans-armenian/700.css';
+
+/*
+ * TODO(mardoto): uncomment once licensed Mardoto files are added to
+ * src/fonts/mardoto/ (see src/fonts/mardoto/README.md).
+ *
+ * @font-face {
+ *   font-family: 'Mardoto';
+ *   src: url('../fonts/mardoto/Mardoto-Bold.woff2') format('woff2');
+ *   font-weight: 700;
+ *   font-display: swap;
+ * }
+ * @font-face {
+ *   font-family: 'Mardoto';
+ *   src: url('../fonts/mardoto/Mardoto-Medium.woff2') format('woff2');
+ *   font-weight: 500;
+ *   font-display: swap;
+ * }
+ */
+
+/* Type scale — matches the design spec's type table. Named by role, not size,
+   so every component references intent instead of hand-rolled font-size. */
+
+.text-app-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.text-orb-status {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.text-assistant-reply {
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 26px;
+  font-weight: 500;
+}
+
+.text-user-message {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+.text-timestamp {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 400;
+}
+
+.text-input {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+.text-button-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.text-section-header {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.text-tile-label {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+}
+
+.text-empty-headline {
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 32px;
+  font-weight: 700;
+}

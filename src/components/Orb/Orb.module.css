@@ -1,0 +1,497 @@
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.wrapper {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 32px;
+  overflow: visible;
+}
+
+.wrapper:hover .robot {
+  transform: translateY(-4px) scale(1.02);
+}
+
+.wrapper[data-state='listening'] .robot {
+  animation: lukaListen 1.2s ease-in-out infinite;
+}
+
+.wrapper[data-state='thinking'] .robot {
+  animation: lukaThink 1.6s ease-in-out infinite;
+}
+
+.wrapper[data-state='speaking'] .robot {
+  animation: lukaSpeak 900ms ease-in-out infinite;
+}
+
+.robotShadow {
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  bottom: 2%;
+  height: 8%;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(79, 216, 255, 0.28), rgba(20, 20, 24, 0.3) 42%, transparent 72%);
+  filter: blur(8px);
+  transform: translateY(18px);
+  animation: shadowFloat 3.2s ease-in-out infinite;
+}
+
+.signalAura {
+  position: absolute;
+  inset: 3% 2% 16%;
+  border-radius: 46px;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(79, 216, 255, 0.22), transparent 42%),
+    radial-gradient(circle at 50% 45%, rgba(45, 140, 200, 0.16), transparent 58%);
+  filter: blur(18px);
+  opacity: 0.72;
+  transition:
+    opacity var(--transition-state) ease,
+    transform var(--transition-state) ease,
+    background var(--transition-state) ease;
+}
+
+.signalAura[data-state='listening'] {
+  background:
+    radial-gradient(circle at 50% 24%, rgba(79, 216, 255, 0.36), transparent 38%),
+    radial-gradient(circle at 50% 44%, rgba(45, 140, 200, 0.28), transparent 62%);
+  animation: auraListen 1.2s ease-in-out infinite;
+}
+
+.signalAura[data-state='thinking'] {
+  background:
+    radial-gradient(circle at 38% 30%, rgba(79, 216, 255, 0.3), transparent 35%),
+    radial-gradient(circle at 64% 42%, rgba(120, 90, 220, 0.26), transparent 58%);
+  animation: auraThink 1.8s ease-in-out infinite;
+}
+
+.signalAura[data-state='speaking'] {
+  background:
+    radial-gradient(circle at 50% 26%, rgba(79, 216, 255, 0.4), transparent 40%),
+    radial-gradient(circle at 50% 44%, rgba(45, 140, 200, 0.32), transparent 64%);
+  animation: auraListen 900ms ease-in-out infinite;
+}
+
+.robot {
+  position: relative;
+  width: 76%;
+  height: 88%;
+  display: block;
+  transform-origin: 50% 72%;
+  transition: transform 220ms ease;
+  animation: lukaIdle 3.6s ease-in-out infinite;
+}
+
+.head {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 0;
+  height: 52%;
+  border-radius: 42% 42% 36% 36% / 46% 46% 30% 30%;
+  background:
+    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.12), transparent 20%),
+    linear-gradient(145deg, #202024, #0a0a0c 62%, #050506);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 14px 12px 26px rgba(255, 255, 255, 0.05),
+    inset -18px -18px 28px rgba(0, 0, 0, 0.8),
+    0 18px 42px -28px rgba(79, 216, 255, 0.4);
+}
+
+.faceScreen {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 26%;
+  height: 48%;
+  overflow: hidden;
+  border-radius: 18% 18% 26% 26% / 22% 22% 34% 34%;
+  background:
+    linear-gradient(rgba(79, 216, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, #0d1417, #010102);
+  background-size: 100% 5px, 100% 100%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.9),
+    inset 0 0 24px rgba(79, 216, 255, 0.06);
+}
+
+.scanLines {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(79, 216, 255, 0.08), transparent);
+  transform: translateY(-100%);
+  animation: screenScan 3.4s linear infinite;
+}
+
+.eyeLeft,
+.eyeRight {
+  position: absolute;
+  top: 34%;
+  width: 21%;
+  height: 18%;
+  border-radius: 999px 999px 30% 30%;
+  border-top: 4px solid #4fd8ff;
+  border-bottom: 0;
+  filter:
+    drop-shadow(0 0 4px rgba(79, 216, 255, 0.9))
+    drop-shadow(0 0 9px rgba(79, 216, 255, 0.6));
+  opacity: 0.95;
+}
+
+.eyeLeft {
+  left: 22%;
+  transform: rotate(7deg);
+}
+
+.eyeRight {
+  right: 22%;
+  transform: rotate(-7deg);
+}
+
+.smile {
+  position: absolute;
+  left: 39%;
+  top: 54%;
+  width: 22%;
+  height: 18%;
+  border-bottom: 4px solid #4fd8ff;
+  border-radius: 0 0 999px 999px;
+  filter:
+    drop-shadow(0 0 4px rgba(79, 216, 255, 0.9))
+    drop-shadow(0 0 10px rgba(79, 216, 255, 0.6));
+}
+
+.earLeft,
+.earRight {
+  position: absolute;
+  top: 22%;
+  width: 22%;
+  height: 46%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.1), transparent 24%),
+    linear-gradient(145deg, #202024, #0a0a0c);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset -8px -10px 14px rgba(0, 0, 0, 0.6),
+    0 8px 18px -12px rgba(79, 216, 255, 0.35);
+}
+
+.earLeft {
+  left: -7%;
+}
+
+.earRight {
+  right: -7%;
+}
+
+.neck {
+  position: absolute;
+  left: 42%;
+  top: 50%;
+  width: 16%;
+  height: 10%;
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(180deg, #16161a, #050506);
+  border-inline: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.torso {
+  position: absolute;
+  left: 27%;
+  right: 27%;
+  top: 57%;
+  height: 30%;
+  border-radius: 46% 46% 40% 40% / 32% 32% 54% 54%;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.1), transparent 22%),
+    linear-gradient(145deg, #202024, #0a0a0c 68%, #050506);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 10px 10px 20px rgba(255, 255, 255, 0.04),
+    inset -14px -18px 22px rgba(0, 0, 0, 0.72);
+}
+
+.armLeft,
+.armRight {
+  position: absolute;
+  top: 8%;
+  width: 29%;
+  height: 62%;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #202024, #050506);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transform-origin: 50% 12%;
+}
+
+.armLeft {
+  left: -24%;
+  transform: rotate(24deg);
+}
+
+.armRight {
+  right: -24%;
+  transform: rotate(-24deg);
+}
+
+.legLeft,
+.legRight {
+  position: absolute;
+  top: 80%;
+  width: 26%;
+  height: 50%;
+  border-radius: 999px 999px 45% 45%;
+  background: linear-gradient(145deg, #202024, #050506);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.legLeft {
+  left: 18%;
+  transform: rotate(8deg);
+}
+
+.legRight {
+  right: 18%;
+  transform: rotate(-8deg);
+}
+
+.wrapper[data-state='listening'] .eyeLeft,
+.wrapper[data-state='listening'] .eyeRight,
+.wrapper[data-state='listening'] .smile,
+.wrapper[data-state='speaking'] .eyeLeft,
+.wrapper[data-state='speaking'] .eyeRight,
+.wrapper[data-state='speaking'] .smile {
+  border-color: #7ee6ff;
+  filter:
+    drop-shadow(0 0 4px rgba(126, 230, 255, 0.95))
+    drop-shadow(0 0 12px rgba(79, 216, 255, 0.85));
+}
+
+.wrapper[data-state='thinking'] .eyeLeft,
+.wrapper[data-state='thinking'] .eyeRight {
+  animation: thinkingEyes 1.1s ease-in-out infinite;
+}
+
+.wrapper[data-state='thinking'] .smile {
+  width: 10%;
+  left: 45%;
+  border-radius: 999px;
+  animation: thinkingMouth 1.1s ease-in-out infinite;
+}
+
+.wrapper[data-state='speaking'] .smile {
+  animation: speakingMouth 520ms ease-in-out infinite;
+}
+
+.wrapper[data-state='listening'] .earLeft,
+.wrapper[data-state='listening'] .earRight {
+  box-shadow:
+    inset -8px -10px 14px rgba(0, 0, 0, 0.56),
+    0 0 22px -6px rgba(79, 216, 255, 0.75);
+}
+
+.statusLine {
+  position: relative;
+  color: var(--text-primary);
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  background:
+    linear-gradient(135deg, rgba(15, 17, 21, 0.76), rgba(3, 3, 4, 0.38)),
+    radial-gradient(circle at 18% 50%, rgba(247, 147, 26, 0.2), transparent 70%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 0 18px rgba(255, 255, 255, 0.04),
+    0 0 24px -10px rgba(255, 214, 0, 0.68);
+  transition: color var(--transition-state) ease;
+}
+
+.statusLine[data-variant='listening'],
+.statusLine[data-variant='speaking'] {
+  color: var(--ember);
+}
+
+.statusLine[data-variant='thinking'] {
+  animation: statusCrossfade var(--duration-status-crossfade) ease-in-out infinite;
+}
+
+.blinkDots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: var(--space-1);
+}
+
+.blinkDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ember);
+  animation: blink 0.8s ease-in-out infinite;
+}
+
+@keyframes lukaIdle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.8deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(0.8deg);
+  }
+}
+
+@keyframes lukaListen {
+  0%,
+  100% {
+    transform: translateY(-4px) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.025);
+  }
+}
+
+@keyframes lukaThink {
+  0%,
+  100% {
+    transform: translateY(-4px) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+@keyframes lukaSpeak {
+  0%,
+  100% {
+    transform: translateY(-5px) scale(1.01);
+  }
+  50% {
+    transform: translateY(-9px) scale(1.035);
+  }
+}
+
+@keyframes shadowFloat {
+  0%,
+  100% {
+    opacity: 0.34;
+    transform: translateY(18px) scaleX(0.9);
+  }
+  50% {
+    opacity: 0.22;
+    transform: translateY(22px) scaleX(1.08);
+  }
+}
+
+@keyframes auraListen {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes auraThink {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: translateX(-3px) scale(0.98);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateX(3px) scale(1.04);
+  }
+}
+
+@keyframes screenScan {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes thinkingEyes {
+  0%,
+  100% {
+    width: 18%;
+    opacity: 0.72;
+  }
+  50% {
+    width: 24%;
+    opacity: 1;
+  }
+}
+
+@keyframes thinkingMouth {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes speakingMouth {
+  0%,
+  100% {
+    height: 10%;
+  }
+  50% {
+    height: 24%;
+  }
+}
+
+@keyframes statusCrossfade {
+  0%,
+  100% {
+    color: var(--thinking-a);
+  }
+  50% {
+    color: var(--thinking-b);
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .robot,
+  .wrapper[data-state='listening'] .robot,
+  .wrapper[data-state='thinking'] .robot,
+  .wrapper[data-state='speaking'] .robot,
+  .robotShadow,
+  .signalAura,
+  .scanLines,
+  .wrapper[data-state='thinking'] .eyeLeft,
+  .wrapper[data-state='thinking'] .eyeRight,
+  .wrapper[data-state='thinking'] .smile,
+  .wrapper[data-state='speaking'] .smile,
+  .statusLine[data-variant='thinking'],
+  .blinkDot {
+    animation: none;
+  }
+}

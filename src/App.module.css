@@ -1,0 +1,138 @@
+.app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  isolation: isolate;
+  background: var(--void);
+  max-width: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-inline: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 0 80px -38px rgba(247, 147, 26, 0.7),
+    0 0 0 1px rgba(30, 41, 59, 0.8);
+}
+
+.app::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 24% 15%, rgba(247, 147, 26, 0.22), transparent 19rem),
+    radial-gradient(circle at 76% 4%, rgba(255, 214, 0, 0.12), transparent 18rem),
+    radial-gradient(circle at 52% 82%, rgba(234, 88, 12, 0.14), transparent 20rem),
+    linear-gradient(180deg, rgba(15, 17, 21, 0.65), rgba(3, 3, 4, 0.96) 58%);
+}
+
+.app::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, transparent, black 22%, black 76%, transparent);
+  opacity: 0.35;
+}
+
+.ambientField,
+.lightBloom,
+.scanBeam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ambientField {
+  z-index: -2;
+  overflow: hidden;
+}
+
+.lightBloom {
+  inset: -18% -26% 34%;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(247, 147, 26, 0.4), transparent 17rem),
+    radial-gradient(circle at 74% 18%, rgba(255, 214, 0, 0.16), transparent 13rem);
+  filter: blur(30px);
+  animation: bloomDrift 9s ease-in-out infinite alternate;
+}
+
+.scanBeam {
+  inset: -40% -80%;
+  background: linear-gradient(
+    110deg,
+    transparent 42%,
+    rgba(255, 214, 0, 0.09) 49%,
+    rgba(247, 147, 26, 0.08) 52%,
+    transparent 60%
+  );
+  animation: scanSweep 7s ease-in-out infinite;
+}
+
+.lukaStage {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-4) 4px;
+  min-height: 256px;
+}
+
+.transcriptArea {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--space-4) calc(92px + env(safe-area-inset-bottom));
+  mask-image: linear-gradient(to bottom, transparent 0, black 22px, black calc(100% - 8px), transparent 100%);
+}
+
+@keyframes bloomDrift {
+  from {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 5%, 0) scale(1.12);
+  }
+}
+
+@keyframes scanSweep {
+  0%,
+  42% {
+    transform: translateX(-44%);
+    opacity: 0;
+  }
+  58% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(44%);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .app {
+    max-width: none;
+    border-inline: 0;
+  }
+
+  .lukaStage {
+    min-height: 240px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightBloom,
+  .scanBeam {
+    animation: none;
+  }
+}

@@ -1,0 +1,400 @@
+.transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 0 0;
+}
+
+.assistantRow {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  animation: podRise 420ms ease both;
+}
+
+.lukaMarker {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  margin-top: 2px;
+  border-radius: 13px 13px 11px 11px;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.12), transparent 24%),
+    linear-gradient(145deg, #202024, #0a0a0c 68%, #050506);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 0 22px -8px rgba(79, 216, 255, 0.7),
+    inset 0 0 18px rgba(255, 255, 255, 0.05);
+  animation: lukaMarkerFloat 2.8s ease-in-out infinite;
+}
+
+.lukaMarker::before,
+.lukaMarker::after {
+  content: '';
+  position: absolute;
+  top: 9px;
+  width: 7px;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #202024, #0a0a0c);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.lukaMarker::before {
+  left: -5px;
+}
+
+.lukaMarker::after {
+  right: -5px;
+}
+
+.lukaMarkerScreen {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 10px;
+  height: 13px;
+  overflow: hidden;
+  border-radius: 6px;
+  background:
+    linear-gradient(rgba(79, 216, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, #0d1417, #010102);
+  background-size: 100% 3px, 100% 100%;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.85);
+}
+
+.lukaMarkerEyeLeft,
+.lukaMarkerEyeRight {
+  position: absolute;
+  top: 4px;
+  width: 6px;
+  height: 4px;
+  border-top: 2px solid #4fd8ff;
+  border-radius: 999px 999px 0 0;
+  filter: drop-shadow(0 0 4px rgba(79, 216, 255, 0.9));
+}
+
+.lukaMarkerEyeLeft {
+  left: 4px;
+}
+
+.lukaMarkerEyeRight {
+  right: 4px;
+}
+
+.lukaMarkerSmile {
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  width: 7px;
+  height: 4px;
+  border-bottom: 2px solid #4fd8ff;
+  border-radius: 0 0 999px 999px;
+  filter: drop-shadow(0 0 4px rgba(79, 216, 255, 0.9));
+}
+
+.assistantBody {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  max-width: 94%;
+  padding: 16px 17px;
+  border-radius: 26px 26px 26px 8px;
+  background:
+    linear-gradient(135deg, rgba(15, 17, 21, 0.82), rgba(3, 3, 4, 0.45)),
+    radial-gradient(circle at 8% 0%, rgba(247, 147, 26, 0.18), transparent 55%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 0 22px rgba(255, 255, 255, 0.035),
+    0 20px 46px -35px rgba(247, 147, 26, 0.82);
+  overflow: hidden;
+}
+
+.assistantBody::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.08), transparent 54%);
+  transform: translateX(-100%);
+  animation: podGlint 6s ease-in-out infinite;
+}
+
+.assistantText {
+  position: relative;
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.userRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  animation: podRise 420ms ease both;
+}
+
+.userBubble {
+  position: relative;
+  max-width: min(78%, 350px);
+  background:
+    linear-gradient(135deg, rgba(234, 88, 12, 0.72), rgba(247, 147, 26, 0.72)),
+    radial-gradient(circle at 85% 10%, rgba(255, 214, 0, 0.28), transparent 50%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px 24px 8px 24px;
+  padding: 13px 16px;
+  box-shadow:
+    inset 0 0 20px rgba(255, 255, 255, 0.055),
+    0 18px 40px -26px rgba(247, 147, 26, 0.9);
+  overflow: hidden;
+}
+
+.userBubble::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.13), transparent);
+  transform: translateX(-110%);
+  animation: podGlint 7s ease-in-out infinite 1.2s;
+}
+
+.userText {
+  position: relative;
+  z-index: 1;
+  color: var(--text-primary);
+}
+
+.timestamp {
+  color: rgba(148, 163, 184, 0.76);
+}
+
+.documentCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 12px;
+  background:
+    linear-gradient(135deg, rgba(15, 17, 21, 0.88), rgba(3, 3, 4, 0.48)),
+    radial-gradient(circle at 0% 0%, rgba(255, 214, 0, 0.14), transparent 45%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  padding: 12px;
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 0 24px rgba(255, 255, 255, 0.035),
+    0 22px 48px -35px rgba(255, 214, 0, 0.78);
+  overflow: hidden;
+  animation: podRise 420ms ease both;
+}
+
+.documentCard[data-error='true'] {
+  border-color: rgba(224, 79, 79, 0.55);
+}
+
+.documentCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(255, 214, 0, 0.24), transparent 18%, transparent 82%, rgba(247, 147, 26, 0.2)),
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 10px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.documentIcon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  color: var(--accent);
+  border-radius: 16px;
+  background: rgba(234, 88, 12, 0.12);
+  border: 1px solid rgba(247, 147, 26, 0.32);
+  transition: color 200ms ease;
+}
+
+.documentIconPulse {
+  color: var(--ember);
+  animation: downloadPulse 600ms ease;
+}
+
+.documentInfo {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.documentName {
+  color: var(--text-primary);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.documentMeta {
+  color: var(--text-secondary);
+}
+
+.downloadButton {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: var(--text-primary);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 214, 0, 0.38);
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 214, 0, 0.22), transparent 56%),
+    rgba(15, 17, 21, 0.72);
+  box-shadow: 0 0 28px -14px rgba(255, 214, 0, 0.9);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.downloadButton:hover {
+  transform: translateY(-2px) scale(1.03);
+  border-color: var(--ember);
+  box-shadow: 0 0 32px -8px rgba(255, 214, 0, 0.58);
+}
+
+@keyframes podRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes podGlint {
+  0%,
+  64% {
+    transform: translateX(-110%);
+  }
+  82%,
+  100% {
+    transform: translateX(110%);
+  }
+}
+
+@keyframes lukaMarkerFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes downloadPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+@media (max-width: 420px) {
+  .assistantRow {
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .lukaMarker {
+    width: 26px;
+    height: 26px;
+    border-radius: 10px;
+  }
+
+  .lukaMarker::before,
+  .lukaMarker::after {
+    top: 7px;
+    width: 5px;
+    height: 12px;
+  }
+
+  .lukaMarkerScreen {
+    left: 5px;
+    right: 5px;
+    top: 8px;
+    height: 10px;
+  }
+
+  .lukaMarkerEyeLeft,
+  .lukaMarkerEyeRight {
+    top: 3px;
+    width: 5px;
+  }
+
+  .lukaMarkerEyeLeft {
+    left: 3px;
+  }
+
+  .lukaMarkerEyeRight {
+    right: 3px;
+  }
+
+  .lukaMarkerSmile {
+    left: 8px;
+    top: 6px;
+    width: 6px;
+  }
+
+  .assistantBody {
+    max-width: 100%;
+    padding: 14px;
+    border-radius: 22px 22px 22px 7px;
+  }
+
+  .documentCard {
+    grid-template-columns: 36px minmax(0, 1fr) 44px;
+    border-radius: 24px;
+  }
+
+  .documentIcon {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+  }
+
+  .downloadButton {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistantRow,
+  .userRow,
+  .documentCard,
+  .lukaMarker,
+  .assistantBody::before,
+  .userBubble::after,
+  .documentIconPulse {
+    animation: none;
+  }
+}

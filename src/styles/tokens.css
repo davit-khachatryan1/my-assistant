@@ -1,0 +1,45 @@
+:root {
+  /* color */
+  --void: #030304;
+  --panel: #0f1115;
+  --panel-border: #1e293b;
+  --accent: #f7931a;
+  --accent-dim: #ea580c;
+  --on-accent: #ffffff;
+  --signal-primary: #ffd600;
+  --signal-primary-dim: #f7931a;
+  --ember: #ffd600;
+  --ember-dim: #ea580c;
+  --thinking-a: #f7931a;
+  --thinking-b: #ffd600;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #94a3b8;
+  --success: #ffd600;
+  --danger: #ea580c;
+
+  /* spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+
+  /* radii */
+  --radius-card: 16px;
+
+  /* motion durations */
+  --transition-state: 350ms;
+  --transition-state-fast: 150ms;
+  --transition-panel: 300ms;
+  --duration-idle-rotation: 40s;
+  --duration-listening-rotation: 12s;
+  --duration-thinking-pulse: 1.8s;
+  --duration-idle-dot-pulse: 3s;
+  --duration-status-crossfade: 2s;
+
+  /* fonts */
+  --font-display: 'Space Grotesk', 'Noto Sans Armenian', sans-serif;
+  --font-body: 'Inter', 'Noto Sans Armenian', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Noto Sans Armenian', monospace;
+}
