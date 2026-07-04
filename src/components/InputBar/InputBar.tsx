@@ -12,13 +12,14 @@ const PLACEHOLDER = {
 };
 
 export function InputBar() {
-  const { orbState, setOrbState, settings, sendUserMessage } = useAppState();
+  const { orbState, setOrbState, settings, sendUserMessage, stopAssistantSpeech } = useAppState();
   const { startRecording, stopRecording } = useRealMicrophone();
   const [value, setValue] = useState('');
   const [micError, setMicError] = useState<string | null>(null);
   const [processingVoice, setProcessingVoice] = useState(false);
 
   const isListening = orbState === 'listening';
+  const isSpeaking = orbState === 'speaking';
 
   const transcribeAndSendRecording = async () => {
     setProcessingVoice(true);
@@ -102,7 +103,7 @@ export function InputBar() {
   };
 
   return (
-    <div className={styles.inputBar}>
+    <div className={styles.inputBar} data-speaking={isSpeaking}>
       {micError && <p className={`${styles.micError} text-timestamp`}>{micError}</p>}
       <MicButton active={isListening} onToggle={handleMicToggle} />
       <textarea
@@ -118,6 +119,18 @@ export function InputBar() {
         }}
         placeholder={PLACEHOLDER[settings.inputLanguage]}
       />
+      {isSpeaking && (
+        <button
+          type="button"
+          className={styles.stopSpeechButton}
+          onClick={stopAssistantSpeech}
+          aria-label="Stop Luka speech"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" />
+          </svg>
+        </button>
+      )}
       <SendButton enabled={value.trim().length > 0 || isListening} onSend={handleSend} />
     </div>
   );

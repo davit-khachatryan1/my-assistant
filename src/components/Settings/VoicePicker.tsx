@@ -11,7 +11,7 @@ const VOICES = [
 const PREVIEW_SAMPLE_TEXT_HY = 'Բարև, ես Լուկան եմ։';
 
 export function VoicePicker() {
-  const { settings, updateSettings } = useAppState();
+  const { settings, updateSettings, stopAssistantSpeech } = useAppState();
   const [previewing, setPreviewing] = useState<string | null>(null);
 
   const handlePreview = async (id: string) => {
@@ -33,6 +33,25 @@ export function VoicePicker() {
 
   return (
     <div className={styles.voiceList}>
+      <div className={styles.voiceReplyRow}>
+        <div>
+          <p className={`${styles.voiceReplyTitle} text-user-message`}>Spoken replies</p>
+          <p className={`${styles.voiceReplyMeta} text-timestamp`}>Voice input still works when this is off.</p>
+        </div>
+        <button
+          type="button"
+          className={styles.voiceReplyToggle}
+          data-selected={settings.voiceReplies}
+          onClick={() => {
+            if (settings.voiceReplies) stopAssistantSpeech();
+            updateSettings({ voiceReplies: !settings.voiceReplies });
+          }}
+          aria-pressed={settings.voiceReplies}
+        >
+          {settings.voiceReplies ? 'ON' : 'OFF'}
+        </button>
+      </div>
+
       {VOICES.map((voice) => (
         <div key={voice.id} className={styles.voiceRow}>
           <button

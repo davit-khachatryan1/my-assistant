@@ -23,6 +23,10 @@
     0 24px 60px -34px rgba(247, 147, 26, 0.9);
 }
 
+.inputBar[data-speaking='true'] {
+  grid-template-columns: 54px minmax(0, 1fr) 54px 54px;
+}
+
 .micError {
   position: absolute;
   left: 4px;
@@ -45,7 +49,8 @@
 }
 
 .micButton,
-.sendButton {
+.sendButton,
+.stopSpeechButton {
   position: relative;
   z-index: 1;
   flex-shrink: 0;
@@ -71,7 +76,8 @@
 }
 
 .micButton::after,
-.sendButton::after {
+.sendButton::after,
+.stopSpeechButton::after {
   content: '';
   position: absolute;
   inset: -7px;
@@ -142,6 +148,27 @@
   color: var(--text-tertiary);
 }
 
+.stopSpeechButton {
+  color: var(--ember);
+  border-color: rgba(255, 214, 0, 0.42);
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 214, 0, 0.22), transparent 56%),
+    linear-gradient(145deg, rgba(15, 17, 21, 0.96), rgba(3, 3, 4, 0.52));
+  box-shadow:
+    0 0 30px -12px rgba(255, 214, 0, 0.78),
+    inset 0 0 18px rgba(255, 255, 255, 0.04);
+}
+
+.stopSpeechButton:hover {
+  transform: translateY(-2px) scale(1.03);
+  border-color: var(--ember);
+}
+
+.stopSpeechButton:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
 .sendButton[data-enabled='true'] {
   background:
     radial-gradient(circle at 68% 28%, rgba(255, 214, 0, 0.28), transparent 54%),
@@ -176,8 +203,13 @@
     border-radius: 26px;
   }
 
+  .inputBar[data-speaking='true'] {
+    grid-template-columns: 48px minmax(0, 1fr) 48px 48px;
+  }
+
   .micButton,
-  .sendButton {
+  .sendButton,
+  .stopSpeechButton {
     width: 48px;
     height: 48px;
     border-radius: 19px;

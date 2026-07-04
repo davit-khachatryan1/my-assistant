@@ -28,6 +28,7 @@ export type LanguageCode = 'hy' | 'en' | 'ru';
 export interface Settings {
   model: string;
   voice: string;
+  voiceReplies: boolean;
   inputLanguage: LanguageCode;
   responseLanguage: LanguageCode;
 }

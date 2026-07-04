@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Message, Settings, DocumentMessage } from './appState.types';
 import type { OrbState, ThinkingLabel } from '../components/Orb/orb.types';
 import { playAudioStream } from '../lib/audio/playAudioResponse';
@@ -26,6 +26,7 @@ interface AppStateValue {
   settings: Settings;
   updateSettings: (partial: Partial<Settings>) => void;
   sendUserMessage: (userText?: string) => void;
+  stopAssistantSpeech: () => void;
 }
 
 const AppStateContext = createContext<AppStateValue | null>(null);
@@ -36,6 +37,8 @@ type StreamChunk =
   | { type: 'error'; message: string }
   | { type: 'done' };
 
+type SpeechResult = 'ok' | 'failed' | 'stopped';
+
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [orbState, setOrbState] = useState<OrbState>('idle');
@@ -43,9 +46,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>({
     model: 'gemini-3-flash-free',
     voice: 'hy-female',
+    voiceReplies: true,
     inputLanguage: 'hy',
     responseLanguage: 'hy',
   });
+  const speechAbortRef = useRef<AbortController | null>(null);
 
   const appendMessage = (message: Message) => {
     setMessages((prev) => [...prev, message]);
@@ -69,24 +74,33 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setSettings((prev) => ({ ...prev, ...partial }));
   };
 
-  const speakReply = async (text: string) => {
+  const stopAssistantSpeech = () => {
+    speechAbortRef.current?.abort();
+    speechAbortRef.current = null;
+    setOrbState('idle');
+  };
+
+  const speakReply = async (text: string): Promise<SpeechResult> => {
+    stopAssistantSpeech();
+    const controller = new AbortController();
+    speechAbortRef.current = controller;
+
     try {
       const res = await fetch('/api/text-to-speech', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, voiceId: settings.voice }),
+        signal: controller.signal,
       });
       if (!res.ok) throw new Error('tts unavailable');
-      await playAudioStream(res);
-      setOrbState('idle');
+      await playAudioStream(res, controller.signal);
+      return 'ok';
     } catch {
-      // Speech synthesis genuinely failed (no key, invalid voice, network,
-      // or playback error) — say so instead of silently faking a "speaking"
-      // animation with no audio.
-      appendMessage(
-        createTextMessage('assistant', 'Ձայնային պատասխանը հնարավոր չեղավ հնչեցնել։'),
-      );
-      setOrbState('idle');
+      return controller.signal.aborted ? 'stopped' : 'failed';
+    } finally {
+      if (speechAbortRef.current === controller) {
+        speechAbortRef.current = null;
+      }
     }
   };
 
@@ -161,7 +175,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
               const assistantMessage = createTextMessage('assistant', '', true);
               assistantMessageId = assistantMessage.id;
               appendMessage(assistantMessage);
-              setOrbState('speaking');
+              setOrbState(settings.voiceReplies ? 'speaking' : 'thinking');
             }
             fullText += chunk.text;
             updateMessageContent(assistantMessageId, (prev) => prev + chunk.text);
@@ -198,8 +212,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         appendMessage(doc);
       }
 
-      if (fullText.trim().length > 0) {
-        await speakReply(fullText.trim());
+      if (settings.voiceReplies && fullText.trim().length > 0) {
+        setOrbState('speaking');
+        const speechResult = await speakReply(fullText.trim());
+        if (speechResult === 'failed') {
+          appendMessage(createTextMessage('assistant', 'Ձայնային պատասխանը հնարավոր չեղավ հնչեցնել։'));
+        }
+        setOrbState('idle');
       } else {
         setOrbState('idle');
       }
@@ -224,6 +243,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       settings,
       updateSettings,
       sendUserMessage,
+      stopAssistantSpeech,
     }),
     [messages, orbState, thinkingLabel, settings],
   );
