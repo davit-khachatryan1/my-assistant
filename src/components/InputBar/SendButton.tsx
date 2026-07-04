@@ -2,7 +2,7 @@ import styles from './InputBar.module.css';
 
 interface SendButtonProps {
   enabled: boolean;
-  onSend: () => void;
+  onSend: () => void | Promise<void>;
 }
 
 export function SendButton({ enabled, onSend }: SendButtonProps) {

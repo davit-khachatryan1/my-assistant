@@ -12,6 +12,19 @@ function toChatTurns(messages: Message[]): ChatTurn[] {
   }));
 }
 
+function latestUserText(messages: Message[]): string {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const message = messages[i];
+    if (message.role === 'user' && message.kind === 'text') return message.content.toLowerCase();
+  }
+  return '';
+}
+
+function explicitlyRequestedDocument(messages: Message[]): boolean {
+  const text = latestUserText(messages);
+  return /(\bpdf\b|\bdocx?\b|\bfile\b|\bdocument\b|\bexport\b|\bdownload\b|փաստաթուղթ|ֆայլ|պդֆ|pdf|արտահանիր|ներբեռնել|скачай|файл|документ|пдф|экспорт)/i.test(text);
+}
+
 const LANGUAGE_NAMES: Record<LanguageCode, string> = {
   hy: 'Armenian',
   en: 'English',
@@ -50,6 +63,7 @@ export async function POST(request: Request) {
 
   const apiKey = process.env[resolved.envVar] as string;
   const turns = [buildLanguageTurn(body.inputLanguage, body.responseLanguage), ...toChatTurns(body.messages)];
+  const allowDocument = explicitlyRequestedDocument(body.messages);
 
   const deepseekExtraBody = resolved.deepseekThinking
     ? { thinking: { type: resolved.deepseekThinking } }
@@ -78,6 +92,15 @@ export async function POST(request: Request) {
           return;
         }
         if (line.startsWith(DOCUMENT_MARKER_PREFIX)) {
+          if (!allowDocument) {
+            write({
+              type: 'token',
+              text: '\n\nԵս փաստաթուղթ չեմ ստեղծի, քանի որ ֆայլ կամ PDF չես խնդրել։ Եթե պետք է, գրիր՝ «պատրաստիր PDF» կամ «ստեղծիր փաստաթուղթ»։',
+            });
+            documentMode = true;
+            documentBuffer = line + '\n';
+            return;
+          }
           documentMode = true;
           documentBuffer = line + '\n';
           return;
@@ -104,7 +127,7 @@ export async function POST(request: Request) {
         }
 
         // stream finished — handle whatever remains
-        if (documentMode) {
+        if (documentMode && allowDocument) {
           documentBuffer += pendingLine;
           const match = documentBuffer.match(DOCUMENT_MARKER_REGEX);
           if (match) {
@@ -114,6 +137,9 @@ export async function POST(request: Request) {
             // malformed marker — fail open, show as ordinary text
             write({ type: 'token', text: documentBuffer });
           }
+        } else if (!allowDocument && documentMode) {
+          // The model tried to create a document without explicit permission.
+          // We already emitted the plain chat notice above, so drop the marker body.
         } else if (pendingLine.length > 0) {
           if (pendingLine.startsWith(DOCUMENT_MARKER_PREFIX)) {
             // marker was the very last (unterminated) line with no body — fail open

@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     const audioStream = await client.textToSpeech.convert(realVoiceId, {
       text,
-      modelId: 'eleven_multilingual_v2',
+      modelId: 'eleven_v3',
     });
 
     return new Response(audioStream as unknown as ReadableStream<Uint8Array>, {

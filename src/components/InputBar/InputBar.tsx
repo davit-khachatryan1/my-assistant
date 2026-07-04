@@ -16,10 +16,57 @@ export function InputBar() {
   const { startRecording, stopRecording } = useRealMicrophone();
   const [value, setValue] = useState('');
   const [micError, setMicError] = useState<string | null>(null);
+  const [processingVoice, setProcessingVoice] = useState(false);
 
   const isListening = orbState === 'listening';
 
+  const transcribeAndSendRecording = async () => {
+    setProcessingVoice(true);
+    setOrbState('thinking');
+    try {
+      const blob = await stopRecording();
+      const res = await fetch('/api/speech-to-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': blob.type || 'audio/webm',
+          'X-Luka-Input-Language': settings.inputLanguage,
+        },
+        body: blob,
+      });
+
+      if (res.status === 503) {
+        setMicError('Ձայնային մուտքը կարգավորված չէ (ELEVENLABS_API_KEY բացակայում է)։');
+        setOrbState('idle');
+        return;
+      }
+      if (!res.ok) throw new Error('transcription failed');
+
+      const { text } = (await res.json()) as { text: string };
+      if (text.trim().length > 0) {
+        sendUserMessage(text);
+      } else {
+        setMicError('Ձայնագրության մեջ խոսք չհայտնաբերվեց։');
+        setOrbState('idle');
+      }
+    } catch {
+      setMicError('Ձայնագրությունը հնարավոր չեղավ մշակել։ Փորձիր նորից։');
+      setOrbState('idle');
+    } finally {
+      setProcessingVoice(false);
+    }
+  };
+
+  const stopRecordingOnly = async () => {
+    try {
+      await stopRecording();
+    } catch {
+      // The send path should still continue with typed text if stopping media
+      // cleanup fails after the browser has already ended the recorder.
+    }
+  };
+
   const handleMicToggle = async () => {
+    if (processingVoice) return;
     setMicError(null);
 
     if (!isListening) {
@@ -32,34 +79,26 @@ export function InputBar() {
       return;
     }
 
-    setOrbState('thinking');
-    try {
-      const blob = await stopRecording();
-      const res = await fetch('/api/speech-to-text', {
-        method: 'POST',
-        headers: { 'Content-Type': blob.type || 'audio/webm' },
-        body: blob,
-      });
-
-      if (res.status === 503) {
-        setMicError('Ձայնային մուտքը կարգավորված չէ (ELEVENLABS_API_KEY բացակայում է)։');
-        setOrbState('idle');
-        return;
-      }
-      if (!res.ok) throw new Error('transcription failed');
-
-      const { text } = (await res.json()) as { text: string };
-      sendUserMessage(text);
-    } catch {
-      setMicError('Ձայնագրությունը հնարավոր չեղավ մշակել։ Փորձիր նորից։');
-      setOrbState('idle');
-    }
+    await transcribeAndSendRecording();
   };
 
-  const handleSend = () => {
-    if (value.trim().length === 0) return;
-    sendUserMessage(value);
-    setValue('');
+  const handleSend = async () => {
+    if (processingVoice) return;
+
+    const trimmed = value.trim();
+    if (trimmed.length > 0) {
+      if (isListening) {
+        await stopRecordingOnly();
+      }
+      sendUserMessage(trimmed);
+      setValue('');
+      return;
+    }
+
+    if (isListening) {
+      setMicError(null);
+      await transcribeAndSendRecording();
+    }
   };
 
   return (
@@ -79,7 +118,7 @@ export function InputBar() {
         }}
         placeholder={PLACEHOLDER[settings.inputLanguage]}
       />
-      <SendButton enabled={value.trim().length > 0} onSend={handleSend} />
+      <SendButton enabled={value.trim().length > 0 || isListening} onSend={handleSend} />
     </div>
   );
 }

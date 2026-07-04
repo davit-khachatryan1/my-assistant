@@ -30,13 +30,22 @@ export function useRealMicrophone() {
         return;
       }
 
-      recorder.onstop = () => {
+      const finalizeRecording = () => {
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
         stream?.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
+        recorderRef.current = null;
         setMicStream(null);
         resolve(blob);
       };
+
+      recorder.onstop = finalizeRecording;
+
+      if (recorder.state === 'inactive') {
+        finalizeRecording();
+        return;
+      }
+
       recorder.stop();
     });
   };
