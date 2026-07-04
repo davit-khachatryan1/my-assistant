@@ -1,7 +1,7 @@
 import { resolveModel } from '../../../lib/providers/modelRouter';
 import { streamAnthropic, streamOpenAICompatible, streamGemini, type ChatTurn } from '../../../lib/providers/streamChat';
 import { DOCUMENT_MARKER_PREFIX, DOCUMENT_MARKER_REGEX } from '../../../lib/providers/systemPrompt';
-import type { Message } from '../../../state/appState.types';
+import type { LanguageCode, Message } from '../../../state/appState.types';
 
 export const runtime = 'nodejs';
 
@@ -12,8 +12,33 @@ function toChatTurns(messages: Message[]): ChatTurn[] {
   }));
 }
 
+const LANGUAGE_NAMES: Record<LanguageCode, string> = {
+  hy: 'Armenian',
+  en: 'English',
+  ru: 'Russian',
+};
+
+function buildLanguageTurn(inputLanguage?: LanguageCode, responseLanguage?: LanguageCode): ChatTurn {
+  const input = LANGUAGE_NAMES[inputLanguage ?? 'hy'];
+  const response = LANGUAGE_NAMES[responseLanguage ?? 'hy'];
+
+  return {
+    role: 'user',
+    content:
+      `Language settings for this conversation:\n` +
+      `- The user will speak/write primarily in ${input}.\n` +
+      `- You must answer in ${response}, unless the user explicitly asks to translate or answer in another language.\n` +
+      `Apply this to every reply, including document text.`,
+  };
+}
+
 export async function POST(request: Request) {
-  const body = (await request.json()) as { messages: Message[]; model: string };
+  const body = (await request.json()) as {
+    messages: Message[];
+    model: string;
+    inputLanguage?: LanguageCode;
+    responseLanguage?: LanguageCode;
+  };
   const resolved = resolveModel(body.model);
 
   if (!resolved || !process.env[resolved.envVar]) {
@@ -24,7 +49,7 @@ export async function POST(request: Request) {
   }
 
   const apiKey = process.env[resolved.envVar] as string;
-  const turns = toChatTurns(body.messages);
+  const turns = [buildLanguageTurn(body.inputLanguage, body.responseLanguage), ...toChatTurns(body.messages)];
 
   const deepseekExtraBody = resolved.deepseekThinking
     ? { thinking: { type: resolved.deepseekThinking } }

@@ -5,9 +5,10 @@ import { MicButton } from './MicButton';
 import { SendButton } from './SendButton';
 import styles from './InputBar.module.css';
 
-const PLACEHOLDER: Record<'hy-first' | 'en-first', string> = {
-  'hy-first': 'Հարցրու ինչ ուզում ես…',
-  'en-first': 'Ask anything…',
+const PLACEHOLDER = {
+  hy: 'Հարցրու ինչ ուզում ես…',
+  en: 'Ask anything…',
+  ru: 'Спроси что угодно…',
 };
 
 export function InputBar() {
@@ -76,7 +77,7 @@ export function InputBar() {
             handleSend();
           }
         }}
-        placeholder={PLACEHOLDER[settings.languageMode]}
+        placeholder={PLACEHOLDER[settings.inputLanguage]}
       />
       <SendButton enabled={value.trim().length > 0} onSend={handleSend} />
     </div>

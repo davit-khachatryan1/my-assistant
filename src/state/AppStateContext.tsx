@@ -41,9 +41,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [orbState, setOrbState] = useState<OrbState>('idle');
   const [thinkingLabel, setThinkingLabel] = useState<ThinkingLabel>('thinking');
   const [settings, setSettings] = useState<Settings>({
-    model: 'gpt-5-mini-free',
+    model: 'gemini-3-flash-free',
     voice: 'hy-female',
-    languageMode: 'hy-first',
+    inputLanguage: 'hy',
+    responseLanguage: 'hy',
   });
 
   const appendMessage = (message: Message) => {
@@ -106,7 +107,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: nextMessages, model: settings.model }),
+        body: JSON.stringify({
+          messages: nextMessages,
+          model: settings.model,
+          inputLanguage: settings.inputLanguage,
+          responseLanguage: settings.responseLanguage,
+        }),
       });
 
       if (res.status === 503) {

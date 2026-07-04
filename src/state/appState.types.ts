@@ -23,10 +23,11 @@ export interface DocumentMessage extends BaseMessage {
 
 export type Message = TextMessage | DocumentMessage;
 
-export type LanguageMode = 'hy-first' | 'en-first';
+export type LanguageCode = 'hy' | 'en' | 'ru';
 
 export interface Settings {
   model: string;
   voice: string;
-  languageMode: LanguageMode;
+  inputLanguage: LanguageCode;
+  responseLanguage: LanguageCode;
 }
