@@ -33,6 +33,9 @@ lerna-debug.log*
 # vercel
 .vercel
 
+# locally persisted app data (generated PDFs, etc.) — not durable storage
+/.data/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

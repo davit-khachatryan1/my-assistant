@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppState } from '../../state/AppStateContext';
-import { useRealMicrophone } from '../../hooks/useRealMicrophone';
+import { getAudioAdapter } from '../../lib/audio/getAudioAdapter';
 import { MicButton } from './MicButton';
 import { SendButton } from './SendButton';
 import styles from './InputBar.module.css';
@@ -13,7 +13,7 @@ const PLACEHOLDER = {
 
 export function InputBar() {
   const { orbState, setOrbState, settings, sendUserMessage, stopAssistantSpeech } = useAppState();
-  const { startRecording, stopRecording } = useRealMicrophone();
+  const audioAdapter = getAudioAdapter();
   const [value, setValue] = useState('');
   const [micError, setMicError] = useState<string | null>(null);
   const [processingVoice, setProcessingVoice] = useState(false);
@@ -25,14 +25,17 @@ export function InputBar() {
     setProcessingVoice(true);
     setOrbState('thinking');
     try {
-      const blob = await stopRecording();
+      const recording = await audioAdapter.stopRecording();
+      // Web's WebAudioAdapter always resolves a Blob; ArrayBuffer is a
+      // future React Native adapter's shape, which has no .type to read.
+      const contentType = recording instanceof Blob ? recording.type || 'audio/webm' : 'audio/webm';
       const res = await fetch('/api/speech-to-text', {
         method: 'POST',
         headers: {
-          'Content-Type': blob.type || 'audio/webm',
+          'Content-Type': contentType,
           'X-Luka-Input-Language': settings.inputLanguage,
         },
-        body: blob,
+        body: recording,
       });
 
       if (res.status === 503) {
@@ -59,7 +62,7 @@ export function InputBar() {
 
   const stopRecordingOnly = async () => {
     try {
-      await stopRecording();
+      await audioAdapter.stopRecording();
     } catch {
       // The send path should still continue with typed text if stopping media
       // cleanup fails after the browser has already ended the recorder.
@@ -72,7 +75,7 @@ export function InputBar() {
 
     if (!isListening) {
       try {
-        await startRecording();
+        await audioAdapter.startRecording();
         setOrbState('listening');
       } catch {
         setMicError('Խնդրում ենք թույլատրել մուտք դեպի խոսափողը։');

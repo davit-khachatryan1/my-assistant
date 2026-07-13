@@ -27,9 +27,12 @@ From the project root:
 The following packages power the real backend integrations (already listed
 in `package.json`):
 
-- `@anthropic-ai/sdk` — Claude chat
+- `@anthropic-ai/sdk` — Claude chat (also powers Claude's native web search
+  tool for Digest mode)
 - `openai` — GPT chat, and (via a custom base URL) DeepSeek + Grok chat
-- `@google/generative-ai` — Gemini chat
+- `@google/generative-ai` — Gemini chat (non-search requests)
+- `@google/genai` — Gemini's native Google Search grounding tool, used only
+  for Digest mode on Gemini models
 - `@elevenlabs/elevenlabs-js` — speech-to-text and text-to-speech
 - `pdf-lib` + `@pdf-lib/fontkit` — PDF document generation with Armenian text
 
@@ -65,10 +68,29 @@ Open http://localhost:3000 in your browser.
 
 ## 5. What's real vs. known limitations
 
-- **Web search is intentionally not implemented.** The "Փնտրիր
-  նորություններ Հայաստանից" suggestion tile sends a normal chat message —
-  the model will respond that it cannot browse the web live. This is a
-  deliberate scope decision, not a bug.
+- **Modes.** Settings has a "Ռեժիմ" (Mode) picker with 4 modes, each with
+  genuinely distinct behavior (`src/lib/providers/modePrompts.ts`):
+  Ուսուցիչ (Tutor, step-by-step teaching), Նորություններ (Digest,
+  search-grounded news/summaries), Հարցազրույց (Interview, mock interview
+  practice), Կրկնում (Retention, spaced-repetition quizzing on earlier
+  Tutor/Digest topics in the same conversation).
+- **Digest mode uses real web search — restricted to Claude and Gemini
+  models.** The "Տեխ նորություններ"/"AI նորություններ" suggestion tiles (and
+  any message sent in Digest mode) use each provider's native search tool
+  (Anthropic's `web_search_20250305`, Gemini's `google_search` grounding) —
+  real, current results, not the model's training data. Only models with
+  `supportsSearch: true` in `modelRouter.ts` (Claude Sonnet 5, Claude
+  Haiku, Gemini 3 Pro, Gemini 3 Flash) can be selected in Digest mode;
+  OpenAI/DeepSeek/Grok don't have a working native search path today, so
+  they're disabled in the model picker while Digest mode is active, and
+  switching into Digest mode on one of them auto-switches to Gemini 3
+  Flash with an inline notice. Anthropic search is capped at 3 tool calls
+  per request; results for identical Digest queries are cached ~10 minutes
+  to limit repeat cost. **This calls paid, metered APIs** — Anthropic
+  bills per search, Gemini's grounding is a metered Google feature.
+  Direct X/Twitter API integration was considered but not built (no free
+  tier as of Feb 2026, pay-per-post-read) — a possible future addition if
+  ever specifically wanted.
 - **Voice IDs are placeholders.** `src/lib/providers/voiceMap.ts` maps the
   app's `hy-female` / `hy-male` voice picker options to ElevenLabs voice
   IDs — out of the box these are placeholder strings and will not produce

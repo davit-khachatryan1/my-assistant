@@ -1,28 +1,27 @@
 import { resolveModel } from '../../../lib/providers/modelRouter';
 import { streamAnthropic, streamOpenAICompatible, streamGemini, type ChatTurn } from '../../../lib/providers/streamChat';
 import { DOCUMENT_MARKER_PREFIX, DOCUMENT_MARKER_REGEX } from '../../../lib/providers/systemPrompt';
-import type { LanguageCode, Message } from '../../../state/appState.types';
+import { conversationStore } from '../../../lib/conversation/store';
+import type { StoredChatMessage } from '../../../lib/conversation/ConversationStore';
+import { getCachedDigest, setCachedDigest } from '../../../lib/search/digestCache';
+import type { LanguageCode, Mode } from '../../../state/appState.types';
 
 export const runtime = 'nodejs';
 
-function toChatTurns(messages: Message[]): ChatTurn[] {
-  return messages.map((m) => ({
-    role: m.role,
-    content: m.kind === 'text' ? m.content : `[a document was generated: ${m.filename}]`,
-  }));
+interface ChatRequestBody {
+  conversationId: string;
+  text: string;
+  mode: Mode;
+  model: string;
+  inputLanguage?: LanguageCode;
+  responseLanguage?: LanguageCode;
 }
 
-function latestUserText(messages: Message[]): string {
-  for (let i = messages.length - 1; i >= 0; i -= 1) {
-    const message = messages[i];
-    if (message.role === 'user' && message.kind === 'text') return message.content.toLowerCase();
-  }
-  return '';
-}
-
-function explicitlyRequestedDocument(messages: Message[]): boolean {
-  const text = latestUserText(messages);
-  return /(\bpdf\b|\bdocx?\b|\bfile\b|\bdocument\b|\bexport\b|\bdownload\b|փաստաթուղթ|ֆայլ|պդֆ|pdf|արտահանիր|ներբեռնել|скачай|файл|документ|пдф|экспорт)/i.test(text);
+function explicitlyRequestedDocument(text: string): boolean {
+  const lower = text.toLowerCase();
+  return /(\bpdf\b|\bdocx?\b|\bfile\b|\bdocument\b|\bexport\b|\bdownload\b|փաստաթուղթ|ֆայլ|պդֆ|pdf|արտահանիր|ներբեռնել|скачай|файл|документ|пдф|экспорт)/i.test(
+    lower,
+  );
 }
 
 const LANGUAGE_NAMES: Record<LanguageCode, string> = {
@@ -45,13 +44,19 @@ function buildLanguageTurn(inputLanguage?: LanguageCode, responseLanguage?: Lang
   };
 }
 
+// Retention mode needs prior Tutor/Digest content to write grounded quiz
+// questions against — see modePrompts.ts's retention prompt.
+function buildRetentionContext(history: StoredChatMessage[]): string {
+  const relevant = history.filter((m) => m.mode === 'tutor' || m.mode === 'digest').slice(-12);
+  if (relevant.length === 0) {
+    return 'Prior topics: none yet (this is a new conversation, or Tutor/Digest mode has not been used yet).';
+  }
+  const lines = relevant.map((m) => `${m.role === 'user' ? 'User' : 'Luka'}: ${m.content}`);
+  return `Prior topics discussed (from Tutor/Digest mode turns):\n${lines.join('\n')}`;
+}
+
 export async function POST(request: Request) {
-  const body = (await request.json()) as {
-    messages: Message[];
-    model: string;
-    inputLanguage?: LanguageCode;
-    responseLanguage?: LanguageCode;
-  };
+  const body = (await request.json()) as ChatRequestBody;
   const resolved = resolveModel(body.model);
 
   if (!resolved || !process.env[resolved.envVar]) {
@@ -61,20 +66,47 @@ export async function POST(request: Request) {
     );
   }
 
+  if (body.mode === 'digest' && !resolved.supportsSearch) {
+    return Response.json(
+      { error: 'search_unsupported_model', provider: resolved.provider, envVar: null },
+      { status: 503 },
+    );
+  }
+
   const apiKey = process.env[resolved.envVar] as string;
-  const turns = [buildLanguageTurn(body.inputLanguage, body.responseLanguage), ...toChatTurns(body.messages)];
-  const allowDocument = explicitlyRequestedDocument(body.messages);
+
+  const history = await conversationStore.getHistory(body.conversationId);
+  const historyTurns: ChatTurn[] = history.map((m) => ({ role: m.role, content: m.content }));
+  const turns: ChatTurn[] = [
+    buildLanguageTurn(body.inputLanguage, body.responseLanguage),
+    ...historyTurns,
+    { role: 'user', content: body.text },
+  ];
+  const allowDocument = explicitlyRequestedDocument(body.text);
+  const retentionContext = body.mode === 'retention' ? buildRetentionContext(history) : undefined;
 
   const deepseekExtraBody = resolved.deepseekThinking
     ? { thinking: { type: resolved.deepseekThinking } }
     : undefined;
 
-  const providerStream =
-    resolved.provider === 'anthropic'
-      ? streamAnthropic(apiKey, resolved.apiModel, turns)
+  const cachedDigest = body.mode === 'digest' ? getCachedDigest(body.text) : null;
+
+  const enableSearch = body.mode === 'digest';
+  const providerStream = cachedDigest
+    ? null
+    : resolved.provider === 'anthropic'
+      ? streamAnthropic(apiKey, resolved.apiModel, turns, body.mode, { enableSearch, retentionContext })
       : resolved.provider === 'google'
-        ? streamGemini(apiKey, resolved.apiModel, turns)
-        : streamOpenAICompatible(apiKey, resolved.baseURL, resolved.apiModel, turns, deepseekExtraBody);
+        ? streamGemini(apiKey, resolved.apiModel, turns, body.mode, { enableSearch, retentionContext })
+        : streamOpenAICompatible(
+            apiKey,
+            resolved.baseURL,
+            resolved.apiModel,
+            turns,
+            body.mode,
+            deepseekExtraBody,
+            retentionContext,
+          );
 
   const encoder = new TextEncoder();
 
@@ -83,8 +115,11 @@ export async function POST(request: Request) {
       let pendingLine = '';
       let documentMode = false;
       let documentBuffer = '';
+      let assistantText = '';
 
-      const write = (obj: unknown) => controller.enqueue(encoder.encode(JSON.stringify(obj) + '\n'));
+      const write = (event: 'token' | 'searchStatus' | 'documentSuggestion' | 'done' | 'error', data: unknown) => {
+        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+      };
 
       const flushLine = (line: string) => {
         if (documentMode) {
@@ -93,10 +128,10 @@ export async function POST(request: Request) {
         }
         if (line.startsWith(DOCUMENT_MARKER_PREFIX)) {
           if (!allowDocument) {
-            write({
-              type: 'token',
-              text: '\n\nԵս փաստաթուղթ չեմ ստեղծի, քանի որ ֆայլ կամ PDF չես խնդրել։ Եթե պետք է, գրիր՝ «պատրաստիր PDF» կամ «ստեղծիր փաստաթուղթ»։',
-            });
+            const notice =
+              '\n\nԵս փաստաթուղթ չեմ ստեղծի, քանի որ ֆայլ կամ PDF չես խնդրել։ Եթե պետք է, գրիր՝ «պատրաստիր PDF» կամ «ստեղծիր փաստաթուղթ»։';
+            write('token', { text: notice });
+            assistantText += notice;
             documentMode = true;
             documentBuffer = line + '\n';
             return;
@@ -105,23 +140,37 @@ export async function POST(request: Request) {
           documentBuffer = line + '\n';
           return;
         }
-        write({ type: 'token', text: line + '\n' });
+        write('token', { text: line + '\n' });
+        assistantText += line + '\n';
       };
 
       try {
-        for await (const chunk of providerStream) {
-          if (chunk.type === 'error') {
-            write({ type: 'error', message: chunk.message });
-            controller.close();
-            return;
-          }
-          if (chunk.type === 'token') {
-            pendingLine += chunk.text;
-            let newlineIndex: number;
-            while ((newlineIndex = pendingLine.indexOf('\n')) !== -1) {
-              const line = pendingLine.slice(0, newlineIndex);
-              flushLine(line);
-              pendingLine = pendingLine.slice(newlineIndex + 1);
+        if (cachedDigest) {
+          write('token', { text: cachedDigest });
+          assistantText = cachedDigest;
+        } else if (providerStream) {
+          for await (const chunk of providerStream) {
+            if (chunk.type === 'error') {
+              write('error', { message: chunk.message });
+              controller.close();
+              return;
+            }
+            if (chunk.type === 'searchStatus') {
+              write('searchStatus', {
+                phase: chunk.phase,
+                resultCount: chunk.resultCount,
+                errorCode: chunk.errorCode,
+              });
+              continue;
+            }
+            if (chunk.type === 'token') {
+              pendingLine += chunk.text;
+              let newlineIndex: number;
+              while ((newlineIndex = pendingLine.indexOf('\n')) !== -1) {
+                const line = pendingLine.slice(0, newlineIndex);
+                flushLine(line);
+                pendingLine = pendingLine.slice(newlineIndex + 1);
+              }
             }
           }
         }
@@ -132,31 +181,52 @@ export async function POST(request: Request) {
           const match = documentBuffer.match(DOCUMENT_MARKER_REGEX);
           if (match) {
             const [, filename, title, content] = match;
-            write({ type: 'document', filename, title, content: content.trim() });
+            write('documentSuggestion', { filename, title, content: content.trim() });
+            assistantText += `[a document was offered: ${title}]`;
           } else {
             // malformed marker — fail open, show as ordinary text
-            write({ type: 'token', text: documentBuffer });
+            write('token', { text: documentBuffer });
+            assistantText += documentBuffer;
           }
         } else if (!allowDocument && documentMode) {
           // The model tried to create a document without explicit permission.
           // We already emitted the plain chat notice above, so drop the marker body.
         } else if (pendingLine.length > 0) {
-          if (pendingLine.startsWith(DOCUMENT_MARKER_PREFIX)) {
-            // marker was the very last (unterminated) line with no body — fail open
-            write({ type: 'token', text: pendingLine });
-          } else {
-            write({ type: 'token', text: pendingLine });
-          }
+          write('token', { text: pendingLine });
+          assistantText += pendingLine;
         }
 
-        write({ type: 'done' });
+        if (body.mode === 'digest' && !cachedDigest && assistantText) {
+          setCachedDigest(body.text, assistantText);
+        }
+
+        await conversationStore.appendMessage(body.conversationId, {
+          role: 'user',
+          content: body.text,
+          createdAt: new Date().toISOString(),
+          mode: body.mode,
+        });
+        await conversationStore.appendMessage(body.conversationId, {
+          role: 'assistant',
+          content: assistantText,
+          createdAt: new Date().toISOString(),
+          mode: body.mode,
+        });
+
+        write('done', {});
       } catch (err) {
-        write({ type: 'error', message: err instanceof Error ? err.message : 'Stream failed' });
+        write('error', { message: err instanceof Error ? err.message : 'Stream failed' });
       } finally {
         controller.close();
       }
     },
   });
 
-  return new Response(stream, { headers: { 'Content-Type': 'application/x-ndjson' } });
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    },
+  });
 }

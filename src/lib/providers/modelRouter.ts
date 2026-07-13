@@ -7,6 +7,10 @@ export interface ModelConfig {
   envVar: string;
   baseURL?: string;
   deepseekThinking?: 'enabled' | 'disabled';
+  // True only for models with a confirmed-workable native search tool
+  // (Anthropic web_search, Gemini google_search). Digest mode is
+  // restricted to these — see chat/route.ts and ModelPicker.tsx.
+  supportsSearch?: boolean;
 }
 
 // Single source of truth mapping every ModelPicker.tsx id to its provider
@@ -15,10 +19,34 @@ export interface ModelConfig {
 export const MODEL_CONFIGS: ModelConfig[] = [
   { id: 'gpt-5', provider: 'openai', apiModel: 'gpt-5', envVar: 'OPENAI_API_KEY' },
   { id: 'gpt-5-mini-free', provider: 'openai', apiModel: 'gpt-5.4-mini', envVar: 'OPENAI_API_KEY' },
-  { id: 'claude-sonnet-5', provider: 'anthropic', apiModel: 'claude-sonnet-5', envVar: 'ANTHROPIC_API_KEY' },
-  { id: 'claude-haiku-free', provider: 'anthropic', apiModel: 'claude-haiku-4-5', envVar: 'ANTHROPIC_API_KEY' },
-  { id: 'gemini-3-pro', provider: 'google', apiModel: 'gemini-3.1-pro-preview', envVar: 'GOOGLE_API_KEY' },
-  { id: 'gemini-3-flash-free', provider: 'google', apiModel: 'gemini-3-flash-preview', envVar: 'GOOGLE_API_KEY' },
+  {
+    id: 'claude-sonnet-5',
+    provider: 'anthropic',
+    apiModel: 'claude-sonnet-5',
+    envVar: 'ANTHROPIC_API_KEY',
+    supportsSearch: true,
+  },
+  {
+    id: 'claude-haiku-free',
+    provider: 'anthropic',
+    apiModel: 'claude-haiku-4-5',
+    envVar: 'ANTHROPIC_API_KEY',
+    supportsSearch: true,
+  },
+  {
+    id: 'gemini-3-pro',
+    provider: 'google',
+    apiModel: 'gemini-3.1-pro-preview',
+    envVar: 'GOOGLE_API_KEY',
+    supportsSearch: true,
+  },
+  {
+    id: 'gemini-3-flash-free',
+    provider: 'google',
+    apiModel: 'gemini-3-flash-preview',
+    envVar: 'GOOGLE_API_KEY',
+    supportsSearch: true,
+  },
   {
     id: 'deepseek-r1-free',
     provider: 'deepseek',

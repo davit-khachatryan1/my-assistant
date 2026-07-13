@@ -1,7 +1,11 @@
 import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Message, Settings, DocumentMessage } from './appState.types';
+import type { Message, Settings, DocumentMessage, DocumentSuggestionMessage } from './appState.types';
 import type { OrbState, ThinkingLabel } from '../components/Orb/orb.types';
-import { playAudioStream } from '../lib/audio/playAudioResponse';
+import { getAudioAdapter } from '../lib/audio/getAudioAdapter';
+import { parseSSEStream } from '../lib/sse/parseSSEStream';
+import { resolveModel } from '../lib/providers/modelRouter';
+
+const DIGEST_FALLBACK_MODEL = 'gemini-3-flash-free';
 
 function createTextMessage(role: Message['role'], content: string, streaming = false): Message {
   return {
@@ -18,28 +22,24 @@ interface AppStateValue {
   messages: Message[];
   appendMessage: (message: Message) => void;
   updateMessageContent: (id: string, updater: (prev: string) => string) => void;
-  updateDocumentMeta: (id: string, fileSizeLabel: string) => void;
   orbState: OrbState;
   setOrbState: (state: OrbState) => void;
   thinkingLabel: ThinkingLabel;
   setThinkingLabel: (label: ThinkingLabel) => void;
   settings: Settings;
   updateSettings: (partial: Partial<Settings>) => void;
-  sendUserMessage: (userText?: string) => void;
+  sendUserMessage: (userText?: string, modeOverride?: Settings['mode']) => void;
   stopAssistantSpeech: () => void;
+  setDocumentSuggestionStatus: (id: string, status: 'idle' | 'generating' | 'error', errorMessage?: string) => void;
+  resolveDocumentSuggestion: (id: string, resolved: { documentId: string; url: string; sizeBytes: number }) => void;
 }
 
 const AppStateContext = createContext<AppStateValue | null>(null);
 
-type StreamChunk =
-  | { type: 'token'; text: string }
-  | { type: 'document'; filename: string; title: string; content: string }
-  | { type: 'error'; message: string }
-  | { type: 'done' };
-
 type SpeechResult = 'ok' | 'failed' | 'stopped';
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
+  const [conversationId] = useState<string>(() => crypto.randomUUID());
   const [messages, setMessages] = useState<Message[]>([]);
   const [orbState, setOrbState] = useState<OrbState>('idle');
   const [thinkingLabel, setThinkingLabel] = useState<ThinkingLabel>('thinking');
@@ -49,6 +49,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     voiceReplies: true,
     inputLanguage: 'hy',
     responseLanguage: 'hy',
+    mode: 'tutor',
   });
   const speechAbortRef = useRef<AbortController | null>(null);
 
@@ -66,12 +67,58 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setMessages((prev) => prev.map((m) => (m.id === id && m.kind === 'text' ? { ...m, streaming: false } : m)));
   };
 
-  const updateDocumentMeta = (id: string, fileSizeLabel: string) => {
-    setMessages((prev) => prev.map((m) => (m.id === id && m.kind === 'document' ? { ...m, fileSizeLabel } : m)));
-  };
-
   const updateSettings = (partial: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...partial }));
+
+    // Digest mode requires a search-capable model. Never a silent switch —
+    // auto-pick the app's free default and tell the user why, once.
+    if (partial.mode === 'digest') {
+      const effectiveModel = partial.model ?? settings.model;
+      const resolved = resolveModel(effectiveModel);
+      if (!resolved?.supportsSearch) {
+        setSettings((prev) => ({ ...prev, model: DIGEST_FALLBACK_MODEL }));
+        appendMessage(
+          createTextMessage(
+            'assistant',
+            'Անցա Gemini 3 Flash մոդելին, քանի որ Նորություններ ռեժիմն աշխատում է միայն որոնման աջակցությամբ մոդելների հետ (Claude կամ Gemini)։',
+          ),
+        );
+      }
+    }
+  };
+
+  const setDocumentSuggestionStatus = (
+    id: string,
+    status: 'idle' | 'generating' | 'error',
+    errorMessage?: string,
+  ) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === id && m.kind === 'document-suggestion' ? { ...m, status, errorMessage } : m)),
+    );
+  };
+
+  const resolveDocumentSuggestion = (
+    id: string,
+    resolved: { documentId: string; url: string; sizeBytes: number },
+  ) => {
+    setMessages((prev) =>
+      prev.map((m): Message => {
+        if (m.id !== id || m.kind !== 'document-suggestion') return m;
+        const documentMessage: DocumentMessage = {
+          id: m.id,
+          role: m.role,
+          kind: 'document',
+          documentId: resolved.documentId,
+          filename: m.filename,
+          fileType: m.filename.split('.').pop()?.toUpperCase() ?? 'PDF',
+          title: m.title,
+          url: resolved.url,
+          sizeBytes: resolved.sizeBytes,
+          timestamp: m.timestamp,
+        };
+        return documentMessage;
+      }),
+    );
   };
 
   const stopAssistantSpeech = () => {
@@ -93,8 +140,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         signal: controller.signal,
       });
       if (!res.ok) throw new Error('tts unavailable');
-      await playAudioStream(res, controller.signal);
-      return 'ok';
+      const audioBuffer = await res.arrayBuffer();
+      const result = await getAudioAdapter().play(audioBuffer, controller.signal);
+      return result;
     } catch {
       return controller.signal.aborted ? 'stopped' : 'failed';
     } finally {
@@ -104,39 +152,48 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const sendUserMessage = async (userText?: string) => {
+  const sendUserMessage = async (userText?: string, modeOverride?: Settings['mode']) => {
     const trimmed = userText?.trim();
-    let nextMessages = messages;
 
     if (trimmed) {
-      const userMessage = createTextMessage('user', trimmed);
-      nextMessages = [...messages, userMessage];
-      appendMessage(userMessage);
+      appendMessage(createTextMessage('user', trimmed));
     }
 
     setThinkingLabel('thinking');
     setOrbState('thinking');
+
+    // Computed independently of `settings` — `updateSettings` may not have
+    // committed its state update yet when a caller (e.g. a chip that both
+    // updates mode and immediately sends) fires both in the same tick, so
+    // this request must be self-consistent rather than trusting a
+    // possibly-stale `settings.mode`/`settings.model` snapshot.
+    const effectiveMode = modeOverride ?? settings.mode;
+    const effectiveModel =
+      effectiveMode === 'digest' && !resolveModel(settings.model)?.supportsSearch
+        ? DIGEST_FALLBACK_MODEL
+        : settings.model;
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: nextMessages,
-          model: settings.model,
+          conversationId,
+          text: trimmed ?? '',
+          mode: effectiveMode,
+          model: effectiveModel,
           inputLanguage: settings.inputLanguage,
           responseLanguage: settings.responseLanguage,
         }),
       });
 
       if (res.status === 503) {
-        const body = await res.json().catch(() => ({} as { envVar?: string }));
-        appendMessage(
-          createTextMessage(
-            'assistant',
-            `Ընտրված մոդելը կարգավորված չէ (բացակայում է ${body.envVar ?? 'API key'})։ Ընտրիր այլ մոդել կամ ավելացրու բանալին .env.local ֆայլում։`,
-          ),
-        );
+        const body = await res.json().catch(() => ({} as { error?: string; envVar?: string }));
+        const message =
+          body.error === 'search_unsupported_model'
+            ? 'Ընտրված մոդելը չի աջակցում որոնում։ Ընտրիր Claude կամ Gemini մոդել Նորություններ ռեժիմի համար։'
+            : `Ընտրված մոդելը կարգավորված չէ (բացակայում է ${body.envVar ?? 'API key'})։ Ընտրիր այլ մոդել կամ ավելացրու բանալին .env.local ֆայլում։`;
+        appendMessage(createTextMessage('assistant', message));
         setOrbState('idle');
         return;
       }
@@ -145,71 +202,56 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         throw new Error('chat request failed');
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
       let assistantMessageId: string | null = null;
       let fullText = '';
-      let pendingDocument: { filename: string; title: string; content: string } | null = null;
 
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-          const line = buffer.slice(0, newlineIndex);
-          buffer = buffer.slice(newlineIndex + 1);
-          if (!line.trim()) continue;
-
-          let chunk: StreamChunk;
-          try {
-            chunk = JSON.parse(line) as StreamChunk;
-          } catch {
-            continue;
+      for await (const { event, data } of parseSSEStream(res.body)) {
+        if (event === 'token') {
+          const { text } = JSON.parse(data) as { text: string };
+          if (!assistantMessageId) {
+            const assistantMessage = createTextMessage('assistant', '', true);
+            assistantMessageId = assistantMessage.id;
+            appendMessage(assistantMessage);
+            setOrbState(settings.voiceReplies ? 'speaking' : 'thinking');
           }
-
-          if (chunk.type === 'token') {
-            if (!assistantMessageId) {
-              const assistantMessage = createTextMessage('assistant', '', true);
-              assistantMessageId = assistantMessage.id;
-              appendMessage(assistantMessage);
-              setOrbState(settings.voiceReplies ? 'speaking' : 'thinking');
-            }
-            fullText += chunk.text;
-            updateMessageContent(assistantMessageId, (prev) => prev + chunk.text);
-          } else if (chunk.type === 'document') {
-            pendingDocument = { filename: chunk.filename, title: chunk.title, content: chunk.content };
-          } else if (chunk.type === 'error') {
-            if (!assistantMessageId) {
-              const assistantMessage = createTextMessage(
-                'assistant',
-                'Ներողություն, տեղի ունեցավ սխալ։ Փորձիր նորից։',
-              );
-              assistantMessageId = assistantMessage.id;
-              appendMessage(assistantMessage);
-            }
+          fullText += text;
+          updateMessageContent(assistantMessageId, (prev) => prev + text);
+        } else if (event === 'searchStatus') {
+          const status = JSON.parse(data) as { phase: 'searching' | 'done' | 'error'; errorCode?: string };
+          if (status.phase === 'searching') {
+            setThinkingLabel('searching');
+          } else if (status.phase === 'error') {
+            appendMessage(createTextMessage('assistant', 'Որոնումը անհասանելի էր այս պահին։'));
           }
+        } else if (event === 'documentSuggestion') {
+          const suggestion = JSON.parse(data) as { filename: string; title: string; content: string };
+          const suggestionMessage: DocumentSuggestionMessage = {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            kind: 'document-suggestion',
+            filename: suggestion.filename,
+            title: suggestion.title,
+            content: suggestion.content,
+            status: 'idle',
+            timestamp: new Date().toISOString(),
+          };
+          appendMessage(suggestionMessage);
+        } else if (event === 'error') {
+          if (!assistantMessageId) {
+            const assistantMessage = createTextMessage(
+              'assistant',
+              'Ներողություն, տեղի ունեցավ սխալ։ Փորձիր նորից։',
+            );
+            assistantMessageId = assistantMessage.id;
+            appendMessage(assistantMessage);
+          }
+        } else if (event === 'done') {
+          break;
         }
       }
 
       if (assistantMessageId) {
         markMessageDone(assistantMessageId);
-      }
-
-      if (pendingDocument) {
-        const doc: DocumentMessage = {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          kind: 'document',
-          filename: pendingDocument.filename,
-          fileType: pendingDocument.filename.split('.').pop()?.toUpperCase() ?? 'PDF',
-          title: pendingDocument.title,
-          content: pendingDocument.content,
-          timestamp: new Date().toISOString(),
-        };
-        appendMessage(doc);
       }
 
       if (settings.voiceReplies && fullText.trim().length > 0) {
@@ -235,7 +277,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       messages,
       appendMessage,
       updateMessageContent,
-      updateDocumentMeta,
       orbState,
       setOrbState,
       thinkingLabel,
@@ -244,6 +285,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateSettings,
       sendUserMessage,
       stopAssistantSpeech,
+      setDocumentSuggestionStatus,
+      resolveDocumentSuggestion,
     }),
     [messages, orbState, thinkingLabel, settings],
   );

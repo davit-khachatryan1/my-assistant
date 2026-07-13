@@ -6,8 +6,13 @@ import { useResponsiveOrbSize } from '../../hooks/useResponsiveOrbSize';
 import styles from './EmptyState.module.css';
 
 export function EmptyState() {
-  const { sendUserMessage } = useAppState();
+  const { sendUserMessage, updateSettings } = useAppState();
   const orbSize = useResponsiveOrbSize(220, 288);
+
+  const handleChipClick = (chip: (typeof promptChips)[number]) => {
+    if (chip.forceMode) updateSettings({ mode: chip.forceMode });
+    sendUserMessage(chip.seedUserMessage, chip.forceMode);
+  };
 
   return (
     <div className={styles.emptyState}>
@@ -20,7 +25,7 @@ export function EmptyState() {
             label={chip.label}
             icon={chip.icon}
             tint={i % 2 === 0 ? 'plum' : 'chartreuse'}
-            onClick={() => sendUserMessage(chip.seedUserMessage)}
+            onClick={() => handleChipClick(chip)}
           />
         ))}
       </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppState } from '../../state/AppStateContext';
-import { playAudioStream } from '../../lib/audio/playAudioResponse';
+import { getAudioAdapter } from '../../lib/audio/getAudioAdapter';
 import styles from './SettingsPanel.module.css';
 
 const VOICES = [
@@ -23,7 +23,8 @@ export function VoicePicker() {
         body: JSON.stringify({ text: PREVIEW_SAMPLE_TEXT_HY, voiceId: id }),
       });
       if (!res.ok) throw new Error('tts unavailable');
-      await playAudioStream(res);
+      const audioBuffer = await res.arrayBuffer();
+      await getAudioAdapter().play(audioBuffer, new AbortController().signal);
     } catch {
       await new Promise((resolve) => setTimeout(resolve, 900));
     } finally {

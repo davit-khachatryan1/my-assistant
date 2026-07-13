@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppState } from '../../state/AppStateContext';
+import { resolveModel } from '../../lib/providers/modelRouter';
 import styles from './SettingsPanel.module.css';
 
 const MODEL_GROUPS = [
@@ -51,29 +52,44 @@ export function ModelPicker() {
       .catch(() => setConfigured(null));
   }, []);
 
+  const searchRequired = settings.mode === 'digest';
+
   return (
     <div className={styles.modelGrid}>
       {MODEL_GROUPS.map((group) => (
         <div key={group.provider} className={styles.modelGroup}>
           <p className={`${styles.modelProvider} text-timestamp`}>{group.provider}</p>
           <div className={styles.modelVersions}>
-            {group.versions.map((version) => (
-              <button
-                key={version.id}
-                type="button"
-                className={`${styles.modelOption} ${styles.pillMono}`}
-                data-selected={settings.model === version.id}
-                onClick={() => updateSettings({ model: version.id })}
-              >
-                <span>{version.label}</span>
-                {version.free && <span className={styles.freeBadge}>FREE</span>}
-                {configured && !configured[version.id] && (
-                  <span className={styles.notConfiguredBadge} title="API key not set">
-                    !
-                  </span>
-                )}
-              </button>
-            ))}
+            {group.versions.map((version) => {
+              const supportsSearch = Boolean(resolveModel(version.id)?.supportsSearch);
+              const disabled = searchRequired && !supportsSearch;
+              return (
+                <button
+                  key={version.id}
+                  type="button"
+                  className={`${styles.modelOption} ${styles.pillMono}`}
+                  data-selected={settings.model === version.id}
+                  disabled={disabled}
+                  onClick={() => updateSettings({ model: version.id })}
+                >
+                  <span>{version.label}</span>
+                  {version.free && <span className={styles.freeBadge}>FREE</span>}
+                  {configured && !configured[version.id] && (
+                    <span className={styles.notConfiguredBadge} title="API key not set">
+                      !
+                    </span>
+                  )}
+                  {disabled && (
+                    <span
+                      className={styles.notConfiguredBadge}
+                      title="Այս մոդելը չի աջակցում որոնում՝ պետք է Claude կամ Gemini"
+                    >
+                      ×
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       ))}

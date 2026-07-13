@@ -1,4 +1,5 @@
 import { useMotionPreference } from '../../state/MotionPreferenceContext';
+import { ModePicker } from './ModePicker';
 import { ModelPicker } from './ModelPicker';
 import { VoicePicker } from './VoicePicker';
 import { LanguageToggle } from './LanguageToggle';
@@ -32,6 +33,11 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
           </svg>
         </button>
       </div>
+
+      <section className={styles.section}>
+        <h3 className={`${styles.sectionHeader} text-section-header`}>Ռեժիմ</h3>
+        <ModePicker />
+      </section>
 
       <section className={styles.section}>
         <h3 className={`${styles.sectionHeader} text-section-header`}>Մոդել</h3>

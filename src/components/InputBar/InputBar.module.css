@@ -9,7 +9,7 @@
   display: grid;
   grid-template-columns: 54px minmax(0, 1fr) 54px;
   align-items: end;
-  gap: 10px;
+  gap: var(--space-3);
   padding: 10px;
   border-radius: 30px;
   background:
@@ -58,7 +58,7 @@
   height: 54px;
   display: grid;
   place-items: center;
-  border-radius: 22px;
+  border-radius: 18px;
   color: var(--text-primary);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background:
@@ -212,7 +212,7 @@
   .stopSpeechButton {
     width: 48px;
     height: 48px;
-    border-radius: 19px;
+    border-radius: 18px;
   }
 }
 

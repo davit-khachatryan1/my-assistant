@@ -2,6 +2,7 @@ import type { Message } from '../../state/appState.types';
 import { AssistantMessage } from './AssistantMessage';
 import { UserMessage } from './UserMessage';
 import { DocumentCard } from './DocumentCard';
+import { DocumentSuggestionCard } from './DocumentSuggestionCard';
 import { useAppState } from '../../state/AppStateContext';
 import styles from './Transcript.module.css';
 
@@ -29,6 +30,9 @@ export function Transcript({ messages }: { messages: Message[] }) {
       {messages.map((message) => {
         if (message.kind === 'document') {
           return <DocumentCard key={message.id} message={message} />;
+        }
+        if (message.kind === 'document-suggestion') {
+          return <DocumentSuggestionCard key={message.id} message={message} />;
         }
         return message.role === 'assistant' ? (
           <AssistantMessage key={message.id} message={message} />

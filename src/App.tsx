@@ -5,6 +5,7 @@ import { MotionPreferenceProvider } from './state/MotionPreferenceContext';
 import { AppStateProvider, useAppState } from './state/AppStateContext';
 import { TopBar } from './components/TopBar/TopBar';
 import { Orb } from './components/Orb/Orb';
+import { VoiceModeToggle } from './components/VoiceModeToggle/VoiceModeToggle';
 import { Transcript } from './components/Chat/Transcript';
 import { EmptyState } from './components/EmptyState/EmptyState';
 import { InputBar } from './components/InputBar/InputBar';
@@ -36,6 +37,7 @@ function AppShell() {
         <>
           <div className={styles.lukaStage}>
             <Orb state={orbState} thinkingLabel={thinkingLabel} onTap={handleOrbTap} size={lukaSize} />
+            <VoiceModeToggle />
           </div>
           <div className={styles.transcriptArea} aria-label="Conversation">
             <Transcript messages={messages} />
@@ -44,7 +46,7 @@ function AppShell() {
       )}
 
       <InputBar />
-      <DevPanel />
+      {process.env.NODE_ENV !== 'production' && <DevPanel />}
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
