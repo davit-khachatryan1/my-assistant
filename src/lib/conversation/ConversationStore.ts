@@ -10,6 +10,9 @@ export interface StoredChatMessage {
 }
 
 export interface ConversationStore {
-  getHistory(conversationId: string): Promise<StoredChatMessage[]>;
-  appendMessage(conversationId: string, message: StoredChatMessage): Promise<void>;
+  // userId present -> signed-in request, routed to the Postgres-backed
+  // implementation for durable cross-device history. Absent -> anonymous,
+  // routed to the in-memory implementation exactly as before. See store.ts.
+  getHistory(conversationId: string, userId?: string): Promise<StoredChatMessage[]>;
+  appendMessage(conversationId: string, message: StoredChatMessage, userId?: string): Promise<void>;
 }

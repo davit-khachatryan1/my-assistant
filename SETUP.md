@@ -53,12 +53,39 @@ in `package.json`):
 | `DEEPSEEK_API_KEY`   | DeepSeek R1 / DeepSeek V3                                                                         | Optional — only if you want DeepSeek models               |
 | `XAI_API_KEY`        | Grok 4 / Grok 3 Mini                                                                              | Optional — only if you want Grok models                   |
 | `ELEVENLABS_API_KEY` | Microphone input (speech-to-text) AND assistant voice replies / voice preview in Settings (TTS) | Optional — typed chat still works without this            |
+| `DATABASE_URL`       | Accounts, and durable conversation history for signed-in users                                  | Optional — anonymous free-tier chat works without it       |
+| `NEXTAUTH_SECRET`    | Session encryption (Auth.js)                                                                     | Optional in dev (falls back to an insecure dev-only value); **required** in production |
+| `NEXTAUTH_URL`       | Auth.js callback base URL                                                                        | Required only if you set `DATABASE_URL` / want sign-in     |
+| `AUTH_RESEND_KEY`    | Sends magic-link sign-in emails via Resend                                                       | Required only if you want sign-in                          |
+| `EMAIL_FROM`         | The verified sender address for magic-link emails                                                | Required only if you want sign-in                          |
 
 **You need at least one chat provider key for chat to do anything at all.**
 If you select a model in Settings whose key isn't set, sending a message
 will show a short inline error instead of a reply — this is expected, not a
 bug (the Settings model list also shows a small red `!` badge next to any
 model whose key isn't configured).
+
+**Accounts/database are entirely optional for local use.** Without
+`DATABASE_URL` set, the app works exactly as before — anonymous, free-tier
+chat, conversation history resets on refresh. Set `DATABASE_URL` +
+`NEXTAUTH_SECRET`/`NEXTAUTH_URL`/`AUTH_RESEND_KEY`/`EMAIL_FROM` together to
+enable sign-in and durable, cross-device conversation history:
+
+1. Provision a Postgres database (Vercel Postgres, Neon, and Supabase all
+   work) and put its connection string in `DATABASE_URL`.
+2. Generate a session secret: `openssl rand -base64 32` → `NEXTAUTH_SECRET`.
+3. Set `NEXTAUTH_URL=http://localhost:3000` for local dev.
+4. Create a free Resend account, verify a sending domain/address, and put
+   the API key in `AUTH_RESEND_KEY` and the verified address in
+   `EMAIL_FROM`.
+5. Push the schema to your database:
+
+       npx drizzle-kit generate
+       npx drizzle-kit migrate
+
+6. Restart `npm run dev`. A "Մուտք" (Sign in) button now appears in the top
+   bar; signing in via the emailed magic link persists your conversation
+   history in Postgres instead of resetting on refresh.
 
 ## 4. Run the app
 
@@ -100,8 +127,10 @@ Open http://localhost:3000 in your browser.
 - **No persistent document storage.** Every "Download" on a document card
   regenerates the PDF on the spot from text captured earlier in the
   conversation; nothing is saved server-side.
-- **Conversation history is in-memory only.** There is no database. A page
-  refresh always returns to the built-in seed conversation.
+- **Conversation history is in-memory only for anonymous users.** Without
+  signing in, a page refresh always starts a new, empty conversation — this
+  is unchanged and intentional for the free/anonymous path. Signing in
+  (see §3) persists history to Postgres instead.
 - **Document offers depend on the model following an internal formatting
   convention** (a hidden marker the model is instructed to emit when a
   document is warranted). This isn't 100% guaranteed across every
@@ -128,3 +157,10 @@ Open http://localhost:3000 in your browser.
 - **Document download fails** — check the server console for a
   `document_generation_failed` error; this usually means the Armenian font
   asset failed to load.
+- **Sign-in email never arrives** — confirm `AUTH_RESEND_KEY` is a real
+  Resend API key and `EMAIL_FROM` is a verified sender address/domain in
+  your Resend account; unverified senders are silently rejected by Resend.
+- **"Cannot find module" or connection errors after setting `DATABASE_URL`**
+  — confirm you've run `npx drizzle-kit generate && npx drizzle-kit migrate`
+  against that database before signing in (the tables must exist first),
+  and restart `npm run dev` after changing `.env.local`.

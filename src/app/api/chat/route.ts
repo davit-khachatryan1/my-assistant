@@ -4,6 +4,7 @@ import { DOCUMENT_MARKER_PREFIX, DOCUMENT_MARKER_REGEX } from '../../../lib/prov
 import { conversationStore } from '../../../lib/conversation/store';
 import type { StoredChatMessage } from '../../../lib/conversation/ConversationStore';
 import { getCachedDigest, setCachedDigest } from '../../../lib/search/digestCache';
+import { auth } from '../../../lib/auth/auth';
 import type { LanguageCode, Mode } from '../../../state/appState.types';
 
 export const runtime = 'nodejs';
@@ -75,7 +76,13 @@ export async function POST(request: Request) {
 
   const apiKey = process.env[resolved.envVar] as string;
 
-  const history = await conversationStore.getHistory(body.conversationId);
+  // Phase A: identity is read but not yet used for gating — a signed-in
+  // user's history is durably persisted to Postgres, an anonymous
+  // request's behavior is byte-for-byte unchanged from before auth existed.
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  const history = await conversationStore.getHistory(body.conversationId, userId);
   const historyTurns: ChatTurn[] = history.map((m) => ({ role: m.role, content: m.content }));
   const turns: ChatTurn[] = [
     buildLanguageTurn(body.inputLanguage, body.responseLanguage),
@@ -200,18 +207,26 @@ export async function POST(request: Request) {
           setCachedDigest(body.text, assistantText);
         }
 
-        await conversationStore.appendMessage(body.conversationId, {
-          role: 'user',
-          content: body.text,
-          createdAt: new Date().toISOString(),
-          mode: body.mode,
-        });
-        await conversationStore.appendMessage(body.conversationId, {
-          role: 'assistant',
-          content: assistantText,
-          createdAt: new Date().toISOString(),
-          mode: body.mode,
-        });
+        await conversationStore.appendMessage(
+          body.conversationId,
+          {
+            role: 'user',
+            content: body.text,
+            createdAt: new Date().toISOString(),
+            mode: body.mode,
+          },
+          userId,
+        );
+        await conversationStore.appendMessage(
+          body.conversationId,
+          {
+            role: 'assistant',
+            content: assistantText,
+            createdAt: new Date().toISOString(),
+            mode: body.mode,
+          },
+          userId,
+        );
 
         write('done', {});
       } catch (err) {

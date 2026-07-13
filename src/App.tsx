@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { SessionProvider } from 'next-auth/react';
 import { MotionPreferenceProvider } from './state/MotionPreferenceContext';
 import { AppStateProvider, useAppState } from './state/AppStateContext';
 import { TopBar } from './components/TopBar/TopBar';
@@ -54,10 +55,12 @@ function AppShell() {
 
 export default function App() {
   return (
-    <MotionPreferenceProvider>
-      <AppStateProvider>
-        <AppShell />
-      </AppStateProvider>
-    </MotionPreferenceProvider>
+    <SessionProvider>
+      <MotionPreferenceProvider>
+        <AppStateProvider>
+          <AppShell />
+        </AppStateProvider>
+      </MotionPreferenceProvider>
+    </SessionProvider>
   );
 }
