@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
+import { useUIStrings } from '../../state/AppStateContext';
 import styles from './TopBar.module.css';
 
 export function AccountButton() {
   const { data: session, status } = useSession();
+  const t = useUIStrings();
 
   if (status === 'loading') {
     return null;
@@ -14,7 +16,7 @@ export function AccountButton() {
   if (!session?.user) {
     return (
       <Link href="/signin" className={`${styles.accountButton} text-button-label`} aria-label="Sign in">
-        Մուտք
+        {t.signIn}
       </Link>
     );
   }

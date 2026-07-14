@@ -1,11 +1,13 @@
-import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Message, Settings, DocumentMessage, DocumentSuggestionMessage } from './appState.types';
 import type { OrbState, ThinkingLabel } from '../components/Orb/orb.types';
 import { getAudioAdapter } from '../lib/audio/getAudioAdapter';
 import { parseSSEStream } from '../lib/sse/parseSSEStream';
 import { resolveModel } from '../lib/providers/modelRouter';
+import { UI_STRINGS, type UIStrings } from '../lib/i18n/uiStrings';
 
 const DIGEST_FALLBACK_MODEL = 'gemini-3-flash-free';
+export const UI_LANGUAGE_STORAGE_KEY = 'luka-ui-language';
 
 function createTextMessage(role: Message['role'], content: string, streaming = false): Message {
   return {
@@ -49,9 +51,34 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     voiceReplies: true,
     inputLanguage: 'hy',
     responseLanguage: 'hy',
+    uiLanguage: 'hy',
     mode: 'tutor',
   });
   const speechAbortRef = useRef<AbortController | null>(null);
+  const t = UI_STRINGS[settings.uiLanguage];
+  // The persist-effect below fires once on mount with the pre-hydration
+  // default ('hy') before the read-effect's setState has taken effect —
+  // writing on that first run would clobber a saved 'en' right back to
+  // 'hy'. Skip exactly that one run; write on every run after.
+  const isFirstPersistRun = useRef(true);
+
+  // Read the persisted UI-language choice after mount only, so the
+  // server-rendered first paint (always 'hy') matches the client's first
+  // paint and React doesn't flag a hydration mismatch.
+  useEffect(() => {
+    const saved = window.localStorage.getItem(UI_LANGUAGE_STORAGE_KEY);
+    if (saved === 'hy' || saved === 'en') {
+      setSettings((prev) => ({ ...prev, uiLanguage: saved }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isFirstPersistRun.current) {
+      isFirstPersistRun.current = false;
+      return;
+    }
+    window.localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, settings.uiLanguage);
+  }, [settings.uiLanguage]);
 
   const appendMessage = (message: Message) => {
     setMessages((prev) => [...prev, message]);
@@ -77,12 +104,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const resolved = resolveModel(effectiveModel);
       if (!resolved?.supportsSearch) {
         setSettings((prev) => ({ ...prev, model: DIGEST_FALLBACK_MODEL }));
-        appendMessage(
-          createTextMessage(
-            'assistant',
-            'Անցա Gemini 3 Flash մոդելին, քանի որ Նորություններ ռեժիմն աշխատում է միայն որոնման աջակցությամբ մոդելների հետ (Claude կամ Gemini)։',
-          ),
-        );
+        appendMessage(createTextMessage('assistant', t.modelSwitchedToGemini));
       }
     }
   };
@@ -191,8 +213,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const body = await res.json().catch(() => ({} as { error?: string; envVar?: string }));
         const message =
           body.error === 'search_unsupported_model'
-            ? 'Ընտրված մոդելը չի աջակցում որոնում։ Ընտրիր Claude կամ Gemini մոդել Նորություններ ռեժիմի համար։'
-            : `Ընտրված մոդելը կարգավորված չէ (բացակայում է ${body.envVar ?? 'API key'})։ Ընտրիր այլ մոդել կամ ավելացրու բանալին .env.local ֆայլում։`;
+            ? t.modelNotSearchCapable
+            : t.providerNotConfigured(body.envVar ?? 'API key');
         appendMessage(createTextMessage('assistant', message));
         setOrbState('idle');
         return;
@@ -221,7 +243,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           if (status.phase === 'searching') {
             setThinkingLabel('searching');
           } else if (status.phase === 'error') {
-            appendMessage(createTextMessage('assistant', 'Որոնումը անհասանելի էր այս պահին։'));
+            appendMessage(createTextMessage('assistant', t.searchUnavailable));
           }
         } else if (event === 'documentSuggestion') {
           const suggestion = JSON.parse(data) as { filename: string; title: string; content: string };
@@ -238,10 +260,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           appendMessage(suggestionMessage);
         } else if (event === 'error') {
           if (!assistantMessageId) {
-            const assistantMessage = createTextMessage(
-              'assistant',
-              'Ներողություն, տեղի ունեցավ սխալ։ Փորձիր նորից։',
-            );
+            const assistantMessage = createTextMessage('assistant', t.genericError);
             assistantMessageId = assistantMessage.id;
             appendMessage(assistantMessage);
           }
@@ -258,16 +277,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setOrbState('speaking');
         const speechResult = await speakReply(fullText.trim());
         if (speechResult === 'failed') {
-          appendMessage(createTextMessage('assistant', 'Ձայնային պատասխանը հնարավոր չեղավ հնչեցնել։'));
+          appendMessage(createTextMessage('assistant', t.speechFailed));
         }
         setOrbState('idle');
       } else {
         setOrbState('idle');
       }
     } catch {
-      appendMessage(
-        createTextMessage('assistant', 'Կապի խնդիր առաջացավ։ Ստուգիր ինտերնետային կապը և փորձիր նորից։'),
-      );
+      appendMessage(createTextMessage('assistant', t.connectionError));
       setOrbState('idle');
     }
   };
@@ -300,4 +317,9 @@ export function useAppState(): AppStateValue {
     throw new Error('useAppState must be used within AppStateProvider');
   }
   return ctx;
+}
+
+export function useUIStrings(): UIStrings {
+  const { settings } = useAppState();
+  return UI_STRINGS[settings.uiLanguage];
 }

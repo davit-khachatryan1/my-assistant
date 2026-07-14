@@ -11,6 +11,7 @@ export function Orb({
   statusLine,
   onTap,
   frozen = false,
+  uiLanguage = 'hy',
 }: OrbProps) {
   const { reducedMotion } = useMotionPreference();
   const [bargingIn, setBargingIn] = useState(false);
@@ -18,7 +19,7 @@ export function Orb({
   const effectiveState = frozen ? 'idle' : state;
   const effectiveReducedMotion = frozen ? true : reducedMotion;
 
-  const anim = useOrbAnimation(effectiveState, thinkingLabel, effectiveReducedMotion);
+  const anim = useOrbAnimation(effectiveState, thinkingLabel, effectiveReducedMotion, uiLanguage);
 
   const handleTap = () => {
     if (frozen) return;

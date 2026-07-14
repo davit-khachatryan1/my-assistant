@@ -1,3 +1,5 @@
+import type { UILanguage } from '../lib/i18n/uiStrings';
+
 export type MessageRole = 'assistant' | 'user';
 
 export interface BaseMessage {
@@ -35,6 +37,14 @@ export type Message = TextMessage | DocumentMessage | DocumentSuggestionMessage;
 
 export type LanguageCode = 'hy' | 'en' | 'ru';
 
+// The UI chrome's own display language (buttons, headers, error/notice
+// copy) — independent of inputLanguage/responseLanguage, which govern the
+// conversation content only. Armenian stays the default; English is the
+// only other UI-chrome translation maintained today. Defined in
+// lib/i18n/uiStrings.ts (the dictionary's home); re-exported here so
+// Settings can reference it without a cross-layer import direction.
+export type { UILanguage };
+
 // Each mode gets a distinct system prompt (src/lib/providers/modePrompts.ts)
 // and, for Digest, a real search-tool-backed capability restricted to
 // search-capable models (src/lib/providers/modelRouter.ts's supportsSearch).
@@ -46,5 +56,6 @@ export interface Settings {
   voiceReplies: boolean;
   inputLanguage: LanguageCode;
   responseLanguage: LanguageCode;
+  uiLanguage: UILanguage;
   mode: Mode;
 }

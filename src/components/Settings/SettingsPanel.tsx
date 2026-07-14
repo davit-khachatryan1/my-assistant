@@ -1,4 +1,5 @@
 import { useMotionPreference } from '../../state/MotionPreferenceContext';
+import { useUIStrings } from '../../state/AppStateContext';
 import { ModePicker } from './ModePicker';
 import { ModelPicker } from './ModelPicker';
 import { VoicePicker } from './VoicePicker';
@@ -12,6 +13,7 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   const { reducedMotion } = useMotionPreference();
+  const t = useUIStrings();
 
   return (
     <div
@@ -21,7 +23,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
       aria-hidden={!open}
     >
       <div className={styles.header}>
-        <h2 className="text-app-title">Կարգավորումներ</h2>
+        <h2 className="text-app-title">{t.settingsTitle}</h2>
         <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close settings">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
@@ -35,22 +37,22 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
       </div>
 
       <section className={styles.section}>
-        <h3 className={`${styles.sectionHeader} text-section-header`}>Ռեժիմ</h3>
+        <h3 className={`${styles.sectionHeader} text-section-header`}>{t.settingsMode}</h3>
         <ModePicker />
       </section>
 
       <section className={styles.section}>
-        <h3 className={`${styles.sectionHeader} text-section-header`}>Մոդել</h3>
+        <h3 className={`${styles.sectionHeader} text-section-header`}>{t.settingsModel}</h3>
         <ModelPicker />
       </section>
 
       <section className={styles.section}>
-        <h3 className={`${styles.sectionHeader} text-section-header`}>Ձայն</h3>
+        <h3 className={`${styles.sectionHeader} text-section-header`}>{t.settingsVoice}</h3>
         <VoicePicker />
       </section>
 
       <section className={styles.section}>
-        <h3 className={`${styles.sectionHeader} text-section-header`}>Լեզու</h3>
+        <h3 className={`${styles.sectionHeader} text-section-header`}>{t.settingsLanguage}</h3>
         <LanguageToggle />
       </section>
     </div>

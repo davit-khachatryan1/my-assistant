@@ -1,10 +1,5 @@
 import type { OrbState, ThinkingLabel } from './orb.types';
-
-const THINKING_LABEL_TEXT: Record<ThinkingLabel, string> = {
-  thinking: 'ՄՏԱԾՈՒՄ Է',
-  searching: 'ՓՆՏՐՈՒՄ Է',
-  writing: 'ԳՐՈՒՄ Է ՓԱՍՏԱԹՈՒՂԹ',
-};
+import { UI_STRINGS } from '../../lib/i18n/uiStrings';
 
 export interface OrbAnimationConfig {
   statusText: string;
@@ -19,18 +14,26 @@ export function useOrbAnimation(
   state: OrbState,
   thinkingLabel: ThinkingLabel,
   reducedMotion: boolean,
+  uiLanguage: 'hy' | 'en' = 'hy',
 ): OrbAnimationConfig {
+  const t = UI_STRINGS[uiLanguage];
+  const thinkingLabelText: Record<ThinkingLabel, string> = {
+    thinking: t.orbThinking,
+    searching: t.orbSearching,
+    writing: t.orbWriting,
+  };
+
   const arcDuration =
     state === 'listening' ? 'var(--duration-listening-rotation)' : 'var(--duration-idle-rotation)';
 
   const statusText =
     state === 'idle'
-      ? 'Հպեք՝ խոսելու համար'
+      ? t.orbTapToSpeak
       : state === 'listening'
-        ? 'ԼՍՈՒՄ Է'
+        ? t.orbListening
         : state === 'thinking'
-          ? THINKING_LABEL_TEXT[thinkingLabel]
-          : 'ԽՈՍՈՒՄ Է';
+          ? thinkingLabelText[thinkingLabel]
+          : t.orbSpeaking;
 
   return {
     statusText,

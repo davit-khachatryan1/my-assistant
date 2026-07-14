@@ -1,18 +1,19 @@
 import { useState } from 'react';
-import { useAppState } from '../../state/AppStateContext';
+import { useAppState, useUIStrings } from '../../state/AppStateContext';
 import { getAudioAdapter } from '../../lib/audio/getAudioAdapter';
 import styles from './SettingsPanel.module.css';
-
-const VOICES = [
-  { id: 'hy-female', label: 'Հայերեն — Իգական' },
-  { id: 'hy-male', label: 'Հայերեն — Արական' },
-];
 
 const PREVIEW_SAMPLE_TEXT_HY = 'Բարև, ես Լուկան եմ։';
 
 export function VoicePicker() {
   const { settings, updateSettings, stopAssistantSpeech } = useAppState();
+  const t = useUIStrings();
   const [previewing, setPreviewing] = useState<string | null>(null);
+
+  const VOICES = [
+    { id: 'hy-female', label: t.voiceHyFemale },
+    { id: 'hy-male', label: t.voiceHyMale },
+  ];
 
   const handlePreview = async (id: string) => {
     setPreviewing(id);
@@ -36,8 +37,8 @@ export function VoicePicker() {
     <div className={styles.voiceList}>
       <div className={styles.voiceReplyRow}>
         <div>
-          <p className={`${styles.voiceReplyTitle} text-user-message`}>Spoken replies</p>
-          <p className={`${styles.voiceReplyMeta} text-timestamp`}>Voice input still works when this is off.</p>
+          <p className={`${styles.voiceReplyTitle} text-user-message`}>{t.spokenReplies}</p>
+          <p className={`${styles.voiceReplyMeta} text-timestamp`}>{t.voiceInputStillWorks}</p>
         </div>
         <button
           type="button"

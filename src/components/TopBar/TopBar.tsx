@@ -9,7 +9,34 @@ export function TopBar({ onOpenSettings }: TopBarProps) {
   return (
     <header className={styles.topBar}>
       <div className={styles.brand}>
-        <span className={styles.statusDot} aria-hidden="true" />
+        <svg className={styles.brandMark} width="26" height="26" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="brandMarkHead" x1="13" y1="9" x2="35" y2="38" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stopColor="#202024" />
+              <stop offset="0.62" stopColor="#0a0a0c" />
+              <stop offset="1" stopColor="#050506" />
+            </linearGradient>
+            <linearGradient id="brandMarkScreen" x1="24" y1="18" x2="24" y2="30" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stopColor="#0d1417" />
+              <stop offset="1" stopColor="#010102" />
+            </linearGradient>
+          </defs>
+          <rect width="48" height="48" rx="16" fill="#030304" />
+          <circle cx="12" cy="23.5" r="4" fill="url(#brandMarkHead)" stroke="rgba(255,255,255,0.12)" />
+          <circle cx="36" cy="23.5" r="4" fill="url(#brandMarkHead)" stroke="rgba(255,255,255,0.12)" />
+          <path
+            d="M13 20c0-7 4.8-11 11-11s11 4 11 11v7c0 7-4.8 11-11 11s-11-4-11-11v-7Z"
+            fill="url(#brandMarkHead)"
+            stroke="rgba(255,255,255,0.12)"
+          />
+          <rect x="15.5" y="18" width="17" height="12" rx="5" fill="url(#brandMarkScreen)" stroke="rgba(255,255,255,0.08)" />
+          <path
+            d="M19 23.5c1.5-2 3.5-2 5 0M24 27c1.5 1.6 3.1 1.6 4.6 0M29 23.5c-1.5-2-3.5-2-5 0"
+            stroke="#4fd8ff"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
         <span className={`${styles.title} text-app-title`}>Luka</span>
         <span className={`${styles.online} text-timestamp`}>ONLINE</span>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAppState } from '../../state/AppStateContext';
+import { useAppState, useUIStrings } from '../../state/AppStateContext';
 import { getAudioAdapter } from '../../lib/audio/getAudioAdapter';
 import { MicButton } from './MicButton';
 import { SendButton } from './SendButton';
@@ -13,6 +13,7 @@ const PLACEHOLDER = {
 
 export function InputBar() {
   const { orbState, setOrbState, settings, sendUserMessage, stopAssistantSpeech } = useAppState();
+  const t = useUIStrings();
   const audioAdapter = getAudioAdapter();
   const [value, setValue] = useState('');
   const [micError, setMicError] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export function InputBar() {
       });
 
       if (res.status === 503) {
-        setMicError('Ձայնային մուտքը կարգավորված չէ (ELEVENLABS_API_KEY բացակայում է)։');
+        setMicError(t.voiceNotConfigured);
         setOrbState('idle');
         return;
       }
@@ -49,11 +50,11 @@ export function InputBar() {
       if (text.trim().length > 0) {
         sendUserMessage(text);
       } else {
-        setMicError('Ձայնագրության մեջ խոսք չհայտնաբերվեց։');
+        setMicError(t.micNoSpeech);
         setOrbState('idle');
       }
     } catch {
-      setMicError('Ձայնագրությունը հնարավոր չեղավ մշակել։ Փորձիր նորից։');
+      setMicError(t.micProcessFailed);
       setOrbState('idle');
     } finally {
       setProcessingVoice(false);
@@ -78,7 +79,7 @@ export function InputBar() {
         await audioAdapter.startRecording();
         setOrbState('listening');
       } catch {
-        setMicError('Խնդրում ենք թույլատրել մուտք դեպի խոսափողը։');
+        setMicError(t.micPermission);
       }
       return;
     }

@@ -44,13 +44,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 62px;
+  height: 48px;
   padding-inline: 4px;
 }
 
 .header h2 {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 21px;
   line-height: 1;
   font-weight: 700;
   background: linear-gradient(110deg, var(--text-primary), var(--ember), var(--accent));
@@ -60,11 +60,11 @@
 }
 
 .closeButton {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
-  border-radius: 18px;
+  border-radius: 14px;
   color: var(--text-primary);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background:
@@ -86,10 +86,10 @@
 .section {
   position: relative;
   z-index: 1;
-  margin-top: 14px;
-  padding: 16px;
+  margin-top: 10px;
+  padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
+  border-radius: 20px;
   background:
     linear-gradient(135deg, rgba(15, 17, 21, 0.82), rgba(3, 3, 4, 0.45)),
     radial-gradient(circle at 0% 0%, rgba(247, 147, 26, 0.14), transparent 54%);
@@ -115,20 +115,20 @@
 .sectionHeader {
   position: relative;
   color: var(--ember);
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .pillRow {
   position: relative;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
 }
 
 .pill {
-  min-height: 46px;
+  min-height: 40px;
   padding: 0 14px;
-  border-radius: 18px;
+  border-radius: 14px;
   background: rgba(3, 3, 4, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
@@ -164,13 +164,13 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .modelGroup {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .modelProvider {
@@ -182,16 +182,16 @@
 .modelVersions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
 }
 
 .modelOption {
-  min-height: 46px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 14px;
-  border-radius: 18px;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 14px;
   background: rgba(3, 3, 4, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
@@ -262,17 +262,17 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .voiceReplyRow {
-  min-height: 64px;
+  min-height: 52px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 74px;
+  grid-template-columns: minmax(0, 1fr) 66px;
   align-items: center;
-  gap: 12px;
-  padding: 10px 10px 10px 14px;
-  border-radius: 22px;
+  gap: 10px;
+  padding: 8px 8px 8px 12px;
+  border-radius: 18px;
   background:
     linear-gradient(135deg, rgba(3, 3, 4, 0.42), rgba(15, 17, 21, 0.5)),
     radial-gradient(circle at 100% 0%, rgba(255, 214, 0, 0.11), transparent 52%);
@@ -285,11 +285,11 @@
 
 .voiceReplyMeta {
   color: var(--text-secondary);
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .voiceReplyToggle {
-  min-height: 44px;
+  min-height: 36px;
   border-radius: 999px;
   color: var(--text-secondary);
   background: rgba(3, 3, 4, 0.46);
@@ -307,26 +307,26 @@
 }
 
 .voiceRow {
-  min-height: 58px;
+  min-height: 48px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 46px;
+  grid-template-columns: minmax(0, 1fr) 38px;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 22px;
+  border-radius: 16px;
   background: rgba(3, 3, 4, 0.34);
-  padding: 6px;
+  padding: 4px;
 }
 
 .voiceLabel {
   flex: 1;
   text-align: left;
   color: var(--text-secondary);
-  min-height: 44px;
+  min-height: 38px;
   display: flex;
   align-items: center;
   padding-inline: 12px;
-  border-radius: 17px;
+  border-radius: 13px;
 }
 
 .voiceLabel[data-selected='true'] {
@@ -335,12 +335,12 @@
 }
 
 .previewButton {
-  width: 46px;
-  height: 46px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border-radius: 18px;
+  border-radius: 14px;
   color: var(--text-secondary);
   border: 1px solid transparent;
   transition:
@@ -362,9 +362,9 @@
   position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  padding: 6px;
-  border-radius: 24px;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 18px;
   background: rgba(3, 3, 4, 0.38);
   border: 1px solid rgba(255, 255, 255, 0.09);
 }
@@ -376,11 +376,17 @@
 }
 
 .segment {
-  min-height: 46px;
+  min-height: 38px;
   flex: 1;
-  padding: 0 var(--space-3);
-  border-radius: 18px;
+  min-width: 0;
+  padding: 0 4px;
+  border-radius: 14px;
   color: var(--text-secondary);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition:
     color 160ms ease,
     background 160ms ease,
@@ -398,14 +404,16 @@
 .languageStack {
   position: relative;
   display: grid;
-  gap: 12px;
+  gap: 6px;
 }
 
 .languageGroup {
   display: grid;
-  gap: 8px;
-  padding: 10px;
-  border-radius: 22px;
+  grid-template-columns: minmax(0, 60px) minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 16px;
   background:
     linear-gradient(135deg, rgba(3, 3, 4, 0.4), rgba(15, 17, 21, 0.48)),
     radial-gradient(circle at 100% 0%, rgba(255, 214, 0, 0.1), transparent 50%);
@@ -413,24 +421,29 @@
 }
 
 .languageLabel {
+  min-width: 0;
   color: var(--ember);
-  letter-spacing: 0.14em;
-  padding-inline: 4px;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  padding-inline: 0;
   text-transform: uppercase;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 
-@media (max-width: 390px) {
+@media (max-width: 340px) {
   .modelVersions {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .segmented {
+  .languageGroup {
     grid-template-columns: 1fr;
   }
 
   .voiceReplyRow {
-    grid-template-columns: minmax(0, 1fr) 60px;
-    padding: 10px 8px 10px 12px;
+    grid-template-columns: minmax(0, 1fr) 52px;
+    padding: 8px 6px 8px 10px;
   }
 }

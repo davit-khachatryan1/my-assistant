@@ -31,6 +31,12 @@ const LANGUAGE_NAMES: Record<LanguageCode, string> = {
   ru: 'Russian',
 };
 
+const DOCUMENT_REJECTED_NOTICE: Record<LanguageCode, string> = {
+  hy: '\n\nԵս փաստաթուղթ չեմ ստեղծի, քանի որ ֆայլ կամ PDF չես խնդրել։ Եթե պետք է, գրիր՝ «պատրաստիր PDF» կամ «ստեղծիր փաստաթուղթ»։',
+  en: "\n\nI won't generate a document since you didn't ask for a file or PDF. If you need one, say \"make a PDF\" or \"generate a document\".",
+  ru: '\n\nЯ не буду создавать документ, так как вы не просили файл или PDF. Если нужно, напишите «сделай PDF» или «создай документ».',
+};
+
 function buildLanguageTurn(inputLanguage?: LanguageCode, responseLanguage?: LanguageCode): ChatTurn {
   const input = LANGUAGE_NAMES[inputLanguage ?? 'hy'];
   const response = LANGUAGE_NAMES[responseLanguage ?? 'hy'];
@@ -135,8 +141,7 @@ export async function POST(request: Request) {
         }
         if (line.startsWith(DOCUMENT_MARKER_PREFIX)) {
           if (!allowDocument) {
-            const notice =
-              '\n\nԵս փաստաթուղթ չեմ ստեղծի, քանի որ ֆայլ կամ PDF չես խնդրել։ Եթե պետք է, գրիր՝ «պատրաստիր PDF» կամ «ստեղծիր փաստաթուղթ»։';
+            const notice = DOCUMENT_REJECTED_NOTICE[body.responseLanguage ?? 'hy'];
             write('token', { text: notice });
             assistantText += notice;
             documentMode = true;

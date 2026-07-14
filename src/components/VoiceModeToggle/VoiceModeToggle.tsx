@@ -1,8 +1,9 @@
-import { useAppState } from '../../state/AppStateContext';
+import { useAppState, useUIStrings } from '../../state/AppStateContext';
 import styles from './VoiceModeToggle.module.css';
 
 export function VoiceModeToggle() {
   const { settings, updateSettings, stopAssistantSpeech } = useAppState();
+  const t = useUIStrings();
   const voiceOn = settings.voiceReplies;
 
   const handleToggle = () => {
@@ -17,7 +18,7 @@ export function VoiceModeToggle() {
       data-selected={voiceOn}
       onClick={handleToggle}
       aria-pressed={voiceOn}
-      aria-label={voiceOn ? 'Անցնել միայն տեքստային պատասխանների' : 'Անցնել ձայնային պատասխանների'}
+      aria-label={voiceOn ? t.voiceModeAriaToText : t.voiceModeAriaToVoice}
     >
       {voiceOn ? (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -45,7 +46,7 @@ export function VoiceModeToggle() {
           <path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       )}
-      <span className="text-button-label">{voiceOn ? 'Ձայն' : 'Միայն տեքստ'}</span>
+      <span className="text-button-label">{voiceOn ? t.voiceModeVoice : t.voiceModeTextOnly}</span>
     </button>
   );
 }

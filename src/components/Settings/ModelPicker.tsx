@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAppState } from '../../state/AppStateContext';
+import { useAppState, useUIStrings } from '../../state/AppStateContext';
 import { resolveModel } from '../../lib/providers/modelRouter';
 import styles from './SettingsPanel.module.css';
 
@@ -43,6 +43,7 @@ const MODEL_GROUPS = [
 
 export function ModelPicker() {
   const { settings, updateSettings } = useAppState();
+  const t = useUIStrings();
   const [configured, setConfigured] = useState<Record<string, boolean> | null>(null);
 
   useEffect(() => {
@@ -80,10 +81,7 @@ export function ModelPicker() {
                     </span>
                   )}
                   {disabled && (
-                    <span
-                      className={styles.notConfiguredBadge}
-                      title="Այս մոդելը չի աջակցում որոնում՝ պետք է Claude կամ Gemini"
-                    >
+                    <span className={styles.notConfiguredBadge} title={t.modelSearchLockTitle}>
                       ×
                     </span>
                   )}

@@ -5,6 +5,11 @@ export const metadata: Metadata = {
   title: 'Luka',
   description: 'Luka AI assistant',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/icons/icon-192.png',
+  },
 };
 
 export const viewport: Viewport = {

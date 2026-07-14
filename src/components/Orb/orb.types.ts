@@ -10,4 +10,5 @@ export interface OrbProps {
   onTap?: () => void;
   /** Skip all animation/state visuals — used for the frozen TopBar mini-orb. */
   frozen?: boolean;
+  uiLanguage?: 'hy' | 'en';
 }

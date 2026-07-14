@@ -16,7 +16,7 @@ import { useResponsiveOrbSize } from './hooks/useResponsiveOrbSize';
 import styles from './App.module.css';
 
 function AppShell() {
-  const { messages, orbState, thinkingLabel, setOrbState } = useAppState();
+  const { messages, orbState, thinkingLabel, setOrbState, settings } = useAppState();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const lukaSize = useResponsiveOrbSize(190, 248);
 
@@ -37,7 +37,13 @@ function AppShell() {
       ) : (
         <>
           <div className={styles.lukaStage}>
-            <Orb state={orbState} thinkingLabel={thinkingLabel} onTap={handleOrbTap} size={lukaSize} />
+            <Orb
+              state={orbState}
+              thinkingLabel={thinkingLabel}
+              onTap={handleOrbTap}
+              size={lukaSize}
+              uiLanguage={settings.uiLanguage}
+            />
             <VoiceModeToggle />
           </div>
           <div className={styles.transcriptArea} aria-label="Conversation">

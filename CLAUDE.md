@@ -3,8 +3,21 @@
 ## Project
 
 Ashkharh ("Luka") — an Armenian-first voice assistant built on Next.js 14
-(App Router). Armenian (hy) is the primary UI/copy language; English (en)
-and Russian (ru) are secondary, user-selectable input/response languages.
+(App Router). Armenian (hy) is the default UI/copy language; English (en)
+and Russian (ru) are secondary, user-selectable input/response languages
+(Settings → Language → "You speak"/"Luka answers", `settings.inputLanguage`/
+`responseLanguage`).
+
+The UI chrome itself (buttons, headers, error/notice copy, orb status text)
+is also user-switchable between Armenian and English — independent of the
+conversation input/response language — via Settings → Language → "App
+language" (`settings.uiLanguage`, persisted to `localStorage` under
+`luka-ui-language`). The dictionary lives in `src/lib/i18n/uiStrings.ts`
+(`UI_STRINGS`); components read it via `useUIStrings()` from
+`AppStateContext.tsx`. Armenian is always the default for both settings —
+never change that default without being asked. When adding any new
+user-facing string to the UI (not conversation content), add it to
+`UIStrings`/`UI_STRINGS` rather than hardcoding it in the component.
 
 There is no database, no test suite, and no CI. Conversation state lives in
 `AppStateContext.tsx` and is in-memory only — it resets on page refresh.

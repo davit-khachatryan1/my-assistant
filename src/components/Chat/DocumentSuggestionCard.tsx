@@ -1,9 +1,10 @@
 import type { DocumentSuggestionMessage } from '../../state/appState.types';
-import { useAppState } from '../../state/AppStateContext';
+import { useAppState, useUIStrings } from '../../state/AppStateContext';
 import styles from './Transcript.module.css';
 
 export function DocumentSuggestionCard({ message }: { message: DocumentSuggestionMessage }) {
   const { setDocumentSuggestionStatus, resolveDocumentSuggestion } = useAppState();
+  const t = useUIStrings();
   const isGenerating = message.status === 'generating';
   const isError = message.status === 'error';
 
@@ -23,11 +24,7 @@ export function DocumentSuggestionCard({ message }: { message: DocumentSuggestio
       const doc = (await res.json()) as { documentId: string; url: string; sizeBytes: number };
       resolveDocumentSuggestion(message.id, doc);
     } catch {
-      setDocumentSuggestionStatus(
-        message.id,
-        'error',
-        'Չհաջողվեց ստեղծել փաստաթուղթը։ Փորձիր նորից։',
-      );
+      setDocumentSuggestionStatus(message.id, 'error', t.docGenerateError);
     }
   };
 
@@ -45,7 +42,7 @@ export function DocumentSuggestionCard({ message }: { message: DocumentSuggestio
       <div className={styles.documentInfo}>
         <p className={`${styles.documentName} text-button-label`}>{message.title}</p>
         <p className={`${styles.documentMeta} text-timestamp`}>
-          {isError ? message.errorMessage : 'Պատրաստ է ստեղծման համար'}
+          {isError ? message.errorMessage : t.docReadyToGenerate}
         </p>
       </div>
       <button
@@ -63,9 +60,7 @@ export function DocumentSuggestionCard({ message }: { message: DocumentSuggestio
             strokeLinejoin="round"
           />
         </svg>
-        <span className="text-button-label">
-          {isGenerating ? 'Ստեղծվում է…' : 'Ստեղծել փաստաթուղթ'}
-        </span>
+        <span className="text-button-label">{isGenerating ? t.docGenerating : t.docGenerate}</span>
       </button>
     </div>
   );

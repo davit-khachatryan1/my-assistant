@@ -1,16 +1,17 @@
 import type { Mode } from '../../state/appState.types';
-import { useAppState } from '../../state/AppStateContext';
+import { useAppState, useUIStrings } from '../../state/AppStateContext';
 import styles from './SettingsPanel.module.css';
-
-const MODES: Array<{ id: Mode; label: string }> = [
-  { id: 'tutor', label: 'Ուսուցիչ' },
-  { id: 'digest', label: 'Նորություններ' },
-  { id: 'interview', label: 'Հարցազրույց' },
-  { id: 'retention', label: 'Կրկնում' },
-];
 
 export function ModePicker() {
   const { settings, updateSettings } = useAppState();
+  const t = useUIStrings();
+
+  const MODES: Array<{ id: Mode; label: string }> = [
+    { id: 'tutor', label: t.modeTutor },
+    { id: 'digest', label: t.modeDigest },
+    { id: 'interview', label: t.modeInterview },
+    { id: 'retention', label: t.modeRetention },
+  ];
 
   return (
     <div className={`${styles.segmented} ${styles.segmentedGrid2}`}>
